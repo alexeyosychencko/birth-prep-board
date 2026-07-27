@@ -2,10 +2,10 @@
 
 import { ProgressValue } from "@/components/ui/progress"
 
-interface WeekProgressValueProps {
+type ProgressValueTextProps = {
   value: string
 }
 
-export function WeekProgressValue({ value }: WeekProgressValueProps) {
+export function ProgressValueText({ value }: ProgressValueTextProps) {
   return <ProgressValue>{() => value}</ProgressValue>
 }

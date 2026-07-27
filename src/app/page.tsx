@@ -11,7 +11,7 @@ import {
   Progress,
   ProgressLabel,
 } from "@/components/ui/progress"
-import { WeekProgressValue } from "@/components/week-progress-value"
+import { ProgressValueText } from "@/components/progress-value-text"
 
 const WEEK_MIN = 20
 const WEEK_MAX = 40
@@ -29,12 +29,12 @@ export default function Page() {
 
       <Progress value={weekProgress}>
         <ProgressLabel>{`Тиждень ${currentWeek} з 40`}</ProgressLabel>
-        <WeekProgressValue value={`${currentWeek - WEEK_MIN} / ${WEEK_MAX - WEEK_MIN}`} />
+        <ProgressValueText value={`${currentWeek - WEEK_MIN} / ${WEEK_MAX - WEEK_MIN}`} />
       </Progress>
 
       <Progress value={checklistProgress}>
         <ProgressLabel>Виконано пунктів чеклиста</ProgressLabel>
-        <WeekProgressValue value={`${MOCK_CHECKLIST_PROGRESS.done} з ${MOCK_CHECKLIST_PROGRESS.total}`} />
+        <ProgressValueText value={`${MOCK_CHECKLIST_PROGRESS.done} з ${MOCK_CHECKLIST_PROGRESS.total}`} />
       </Progress>
 
       <Card>

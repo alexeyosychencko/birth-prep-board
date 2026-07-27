@@ -24,9 +24,16 @@
 
 ## Spacing
 
-Компоненти в цьому проєкті не хардкодять `p-4`/`gap-6` напряму —
-вони визначають CSS-змінну на рівні кореневого елемента і посилаються
-на неї через `--spacing()`, як `Card` це вже робить (Tailwind v4 bracket syntax, `card.tsx:15`):
+Це стосується лише перевикористовуваних компонентів у
+`src/components/ui/` — сторінкові layout-файли (`src/app/layout.tsx`,
+`src/app/page.tsx`, стаб-сторінки розділів) навмисно хардкодять
+звичайні Tailwind spacing-утиліти (`p-4 md:p-8`, `gap-6`, `gap-2`)
+напряму, і це очікувана поведінка, не порушення патерну нижче.
+
+Для компонентів у `src/components/ui/` не хардкодять `p-4`/`gap-6`
+напряму — вони визначають CSS-змінну на рівні кореневого елемента і
+посилаються на неї через `--spacing()`, як `Card` це вже робить
+(Tailwind v4 bracket syntax, `card.tsx:15`):
 
 ```
 [--card-spacing:--spacing(6)]      /* --size=default */
@@ -45,13 +52,17 @@
 
 | Токен | Значення | Де вже використовується |
 |---|---|---|
-| `rounded-sm` (`--radius-sm`) | 0.6rem | дрібні елементи (чекбокси) |
-| `rounded-md` (`--radius-md`) | 0.8rem | інпути, badge |
+| `rounded-sm` (`--radius-sm`) | 0.6rem | — |
+| `rounded-md` (`--radius-md`) | 0.8rem | — |
 | `rounded-lg` (`--radius-lg`) | 1rem | базові контейнери |
 | `rounded-xl` (`--radius-xl`) | 1.4rem | — |
 | `rounded-2xl` (`--radius-2xl`) | 1.8rem | `Card` (`card.tsx:15`) |
 | `rounded-3xl` (`--radius-3xl`) | 2.2rem | — |
-| `rounded-4xl` (`--radius-4xl`) | 2.6rem | `Button`, `Progress`-track (pill-форма) |
+| `rounded-4xl` (`--radius-4xl`) | 2.6rem | `Button`, `Input`, `Progress`-track (pill-форма) |
+
+`Checkbox` (`checkbox.tsx:11`) використовує довільне значення
+`rounded-[6px]`, а не токен `rounded-sm` — не завʼязуйте нові дрібні
+елементи на цей приклад, якщо потрібен саме токен зі шкали вище.
 
 ## Кольори — семантика
 
@@ -86,5 +97,7 @@
 `CardTitle` (номер тижня) / `CardContent` (`tip`-текст, `text-sm`).
 
 **Пункт навігації** (App Shell, Задача 3): іконка з `@hugeicons/core-free-icons`
-+ підпис, активний стан підсвічується через `primary`/`sidebar-primary`,
-не через зміну розміру чи ваги шрифту.
++ підпис, активний стан підсвічується через `data-active:bg-sidebar-accent`
++ `data-active:font-medium` (CLI-generated `sidebarMenuButtonVariants`,
+`sidebar.tsx:482`) — фон `sidebar-accent`, а не `sidebar-primary`, і зміна
+ваги шрифту, а не кольору тексту.

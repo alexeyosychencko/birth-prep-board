@@ -47,7 +47,7 @@ export default function RootLayout({
                 <SidebarTrigger />
                 <span className="text-sm font-heading font-semibold">Birth Prep Board</span>
               </header>
-              <main className="flex-1 p-4 md:p-8">{children}</main>
+              <div className="flex-1 p-4 md:p-8">{children}</div>
             </SidebarInset>
           </SidebarProvider>
         </ThemeProvider>
