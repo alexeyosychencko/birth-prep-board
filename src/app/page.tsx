@@ -1,5 +1,3 @@
-"use client"
-
 import { getCurrentWeek } from "@/lib/pregnancy"
 import { getWeekContent } from "@/lib/mock/week-content"
 import { MOCK_CHECKLIST_PROGRESS, MOCK_DUE_DATE } from "@/lib/mock/household"
@@ -12,8 +10,8 @@ import {
 import {
   Progress,
   ProgressLabel,
-  ProgressValue,
 } from "@/components/ui/progress"
+import { WeekProgressValue } from "@/components/week-progress-value"
 
 const WEEK_MIN = 20
 const WEEK_MAX = 40
@@ -31,16 +29,12 @@ export default function Page() {
 
       <Progress value={weekProgress}>
         <ProgressLabel>{`Тиждень ${currentWeek} з 40`}</ProgressLabel>
-        <ProgressValue>
-          {() => `${currentWeek - WEEK_MIN} / ${WEEK_MAX - WEEK_MIN}`}
-        </ProgressValue>
+        <WeekProgressValue value={`${currentWeek - WEEK_MIN} / ${WEEK_MAX - WEEK_MIN}`} />
       </Progress>
 
       <Progress value={checklistProgress}>
         <ProgressLabel>Виконано пунктів чеклиста</ProgressLabel>
-        <ProgressValue>
-          {() => `${MOCK_CHECKLIST_PROGRESS.done} з ${MOCK_CHECKLIST_PROGRESS.total}`}
-        </ProgressValue>
+        <WeekProgressValue value={`${MOCK_CHECKLIST_PROGRESS.done} з ${MOCK_CHECKLIST_PROGRESS.total}`} />
       </Progress>
 
       <Card>
