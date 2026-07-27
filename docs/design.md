@@ -14,7 +14,7 @@
 | Клас | Призначення | Приклад |
 |---|---|---|
 | `text-3xl font-heading font-semibold` | Заголовок сторінки (H1) | "Дашборд", заголовок розділу |
-| `text-lg font-heading font-medium` | Заголовок картки/секції | `CardTitle`-подібні елементи |
+| `text-base font-heading font-medium` | Заголовок картки/секції | `CardTitle`-подібні елементи |
 | `text-sm` | Базовий текст, весь основний контент | назви пунктів чеклиста |
 | `text-sm text-muted-foreground` | Другорядний/описовий текст | `CardDescription` |
 | `text-xs text-muted-foreground` | Мета-інформація, підписи | таймстемпи, лічильники |
@@ -26,11 +26,11 @@
 
 Компоненти в цьому проєкті не хардкодять `p-4`/`gap-6` напряму —
 вони визначають CSS-змінну на рівні кореневого елемента і посилаються
-на неї через `--spacing()`, як `Card` це вже робить:
+на неї через `--spacing()`, як `Card` це вже робить (Tailwind v4 bracket syntax, `card.tsx:15`):
 
-```css
---card-spacing: --spacing(6);      /* --size=default */
---card-spacing: --spacing(4);      /* --size=sm */
+```
+[--card-spacing:--spacing(6)]      /* --size=default */
+[--card-spacing:--spacing(4)]      /* --size=sm */
 ```
 
 Для нових складених компонентів (список пунктів чеклиста, рядок
