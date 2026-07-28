@@ -1,4 +1,8 @@
-import { getCurrentWeek } from "@/lib/pregnancy"
+import {
+  getCurrentWeek,
+  PREGNANCY_WEEK_MAX,
+  PREGNANCY_WEEK_MIN,
+} from "@/lib/pregnancy"
 import { getWeekContent } from "@/lib/mock/week-content"
 import { MOCK_CHECKLIST_PROGRESS, MOCK_DUE_DATE } from "@/lib/mock/household"
 import {
@@ -13,13 +17,13 @@ import {
 } from "@/components/ui/progress"
 import { ProgressValueText } from "@/components/progress-value-text"
 
-const WEEK_MIN = 20
-const WEEK_MAX = 40
-
 export default function Page() {
   const currentWeek = getCurrentWeek(MOCK_DUE_DATE)
   const weekContent = getWeekContent(currentWeek)
-  const weekProgress = ((currentWeek - WEEK_MIN) / (WEEK_MAX - WEEK_MIN)) * 100
+  const weekProgress =
+    ((currentWeek - PREGNANCY_WEEK_MIN) /
+      (PREGNANCY_WEEK_MAX - PREGNANCY_WEEK_MIN)) *
+    100
   const checklistProgress =
     (MOCK_CHECKLIST_PROGRESS.done / MOCK_CHECKLIST_PROGRESS.total) * 100
 
@@ -29,7 +33,9 @@ export default function Page() {
 
       <Progress value={weekProgress}>
         <ProgressLabel>{`Тиждень ${currentWeek} з 40`}</ProgressLabel>
-        <ProgressValueText value={`${currentWeek - WEEK_MIN} / ${WEEK_MAX - WEEK_MIN}`} />
+        <ProgressValueText
+          value={`${currentWeek - PREGNANCY_WEEK_MIN} / ${PREGNANCY_WEEK_MAX - PREGNANCY_WEEK_MIN}`}
+        />
       </Progress>
 
       <Progress value={checklistProgress}>

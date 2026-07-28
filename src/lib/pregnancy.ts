@@ -1,5 +1,5 @@
-const PREGNANCY_WEEK_MIN = 20
-const PREGNANCY_WEEK_MAX = 40
+export const PREGNANCY_WEEK_MIN = 20
+export const PREGNANCY_WEEK_MAX = 40
 const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
 
 function toUTCDayMs(date: Date): number {
