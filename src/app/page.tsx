@@ -33,9 +33,6 @@ export default function Page() {
 
       <Progress value={weekProgress}>
         <ProgressLabel>{`Тиждень ${currentWeek} з 40`}</ProgressLabel>
-        <ProgressValueText
-          value={`${currentWeek - PREGNANCY_WEEK_MIN} / ${PREGNANCY_WEEK_MAX - PREGNANCY_WEEK_MIN}`}
-        />
       </Progress>
 
       <Progress value={checklistProgress}>
