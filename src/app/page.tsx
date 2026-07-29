@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/progress"
 import { ProgressValueText } from "@/components/progress-value-text"
 
+export const dynamic = "force-dynamic"
+
 export default async function Page() {
   const household = await householdRepository.getOrCreateDefaultHousehold()
   const [pregnancy, items] = await Promise.all([

@@ -20,12 +20,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import type { Item, Subsection } from "@/lib/types"
-import { toggleItemAction, addItemAction, deleteItemAction } from "@/lib/actions/checklist-actions"
+import {
+  toggleItemAction,
+  addItemAction,
+  deleteItemAction,
+  updateItemPriceAction,
+} from "@/lib/actions/checklist-actions"
 
 type OptimisticAction =
   | { type: "toggle"; itemId: string }
   | { type: "add"; item: Item }
   | { type: "delete"; itemId: string }
+  | { type: "updatePrice"; itemId: string; price: number | null }
 
 function reduceOptimistic(state: Item[], action: OptimisticAction): Item[] {
   switch (action.type) {
@@ -37,6 +43,10 @@ function reduceOptimistic(state: Item[], action: OptimisticAction): Item[] {
       return [...state, action.item]
     case "delete":
       return state.filter((item) => item.id !== action.itemId)
+    case "updatePrice":
+      return state.map((item) =>
+        item.id === action.itemId ? { ...item, price: action.price } : item
+      )
   }
 }
 
@@ -45,17 +55,38 @@ function ChecklistRow({
   isPending,
   onToggle,
   onDelete,
+  onUpdatePrice,
 }: {
   item: Item
   isPending: boolean
   onToggle: () => void
   onDelete: () => void
+  onUpdatePrice: (price: number | null) => void
 }) {
   return (
     <li className="flex items-center gap-3 py-1.5">
       <Checkbox checked={item.is_checked} onCheckedChange={onToggle} disabled={isPending} />
       <span className="flex-1 text-sm">{item.title}</span>
-      {item.price !== null && <span className="text-sm text-muted-foreground">{item.price} грн</span>}
+      <Input
+        type="number"
+        min="0"
+        step="0.01"
+        inputMode="decimal"
+        aria-label="Ціна, грн"
+        defaultValue={item.price ?? ""}
+        disabled={isPending}
+        className="h-8 w-20 text-right text-sm text-muted-foreground"
+        onBlur={(event) => {
+          const raw = event.currentTarget.value.trim()
+          const parsed = raw === "" ? null : Number(raw)
+          if (parsed !== null && Number.isNaN(parsed)) {
+            event.currentTarget.value = item.price === null ? "" : String(item.price)
+            return
+          }
+          if (parsed === item.price) return
+          onUpdatePrice(parsed)
+        }}
+      />
       {!item.is_seed && (
         <Button variant="ghost" size="icon-sm" aria-label="Видалити пункт" disabled={isPending} onClick={onDelete}>
           <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
@@ -70,11 +101,13 @@ function ChecklistList({
   isPending,
   onToggle,
   onDelete,
+  onUpdatePrice,
 }: {
   items: Item[]
   isPending: boolean
   onToggle: (item: Item) => void
   onDelete: (item: Item) => void
+  onUpdatePrice: (item: Item, price: number | null) => void
 }) {
   if (items.length === 0) {
     return <p className="text-sm text-muted-foreground">Поки немає пунктів. Додайте перший.</p>
@@ -88,6 +121,7 @@ function ChecklistList({
           isPending={isPending}
           onToggle={() => onToggle(item)}
           onDelete={() => onDelete(item)}
+          onUpdatePrice={(price) => onUpdatePrice(item, price)}
         />
       ))}
     </ul>
@@ -130,6 +164,17 @@ export function SectionChecklist({
     })
   }
 
+  function handleUpdatePrice(item: Item, price: number | null) {
+    startTransition(async () => {
+      applyOptimistic({ type: "updatePrice", itemId: item.id, price })
+      try {
+        await updateItemPriceAction(path, item.id, price)
+      } catch {
+        toast.error("Не вдалось оновити ціну. Спробуйте ще раз.")
+      }
+    })
+  }
+
   function handleAdd(title: string, price: number | null, subsection: Subsection | null = null) {
     const newItem: Item = {
       id: crypto.randomUUID(),
@@ -167,11 +212,18 @@ export function SectionChecklist({
               isPending={isPending}
               onToggle={handleToggle}
               onDelete={handleDelete}
+              onUpdatePrice={handleUpdatePrice}
             />
           </div>
         ))
       ) : (
-        <ChecklistList items={sorted} isPending={isPending} onToggle={handleToggle} onDelete={handleDelete} />
+        <ChecklistList
+          items={sorted}
+          isPending={isPending}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+          onUpdatePrice={handleUpdatePrice}
+        />
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

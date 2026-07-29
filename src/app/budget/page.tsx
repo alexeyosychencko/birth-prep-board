@@ -1,8 +1,10 @@
 import { householdRepository, budgetRepository, itemsRepository } from "@/lib/repositories"
 import { calculateBudgetPlan, calculateBudgetFact } from "@/lib/budget"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress, ProgressLabel, ProgressValue } from "@/components/ui/progress"
+import { Progress, ProgressLabel } from "@/components/ui/progress"
 import { BudgetGoalForm } from "@/components/budget/budget-goal-form"
+
+export const dynamic = "force-dynamic"
 
 export default async function Page() {
   const household = await householdRepository.getOrCreateDefaultHousehold()
@@ -20,7 +22,6 @@ export default async function Page() {
 
       <Progress value={factProgress}>
         <ProgressLabel>{`Витрачено ${fact} з ${goal.goal_amount} грн`}</ProgressLabel>
-        <ProgressValue />
       </Progress>
 
       <Card>

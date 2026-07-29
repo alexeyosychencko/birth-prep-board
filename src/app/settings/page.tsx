@@ -1,6 +1,8 @@
 import { householdRepository, pregnancyRepository } from "@/lib/repositories"
 import { DueDateForm } from "@/components/settings/due-date-form"
 
+export const dynamic = "force-dynamic"
+
 export default async function Page() {
   const household = await householdRepository.getOrCreateDefaultHousehold()
   const pregnancy = await pregnancyRepository.getPregnancy(household.id)

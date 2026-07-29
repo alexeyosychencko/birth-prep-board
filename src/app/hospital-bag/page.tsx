@@ -2,6 +2,8 @@ import { householdRepository, itemsRepository } from "@/lib/repositories"
 import { SECTIONS } from "@/lib/sections"
 import { SectionChecklist } from "@/components/checklist/section-checklist"
 
+export const dynamic = "force-dynamic"
+
 export default async function Page() {
   const household = await householdRepository.getOrCreateDefaultHousehold()
   const items = await itemsRepository.getItemsBySection(household.id, SECTIONS.hospitalBag.id)
