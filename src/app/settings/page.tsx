@@ -1,8 +1,18 @@
-export default function Page() {
+import { householdRepository, pregnancyRepository } from "@/lib/repositories"
+import { DueDateForm } from "@/components/settings/due-date-form"
+
+export default async function Page() {
+  const household = await householdRepository.getOrCreateDefaultHousehold()
+  const pregnancy = await pregnancyRepository.getPregnancy(household.id)
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-heading font-semibold">Налаштування</h1>
-      <p className="text-sm text-muted-foreground">Розділ у розробці.</p>
+      {pregnancy ? (
+        <DueDateForm initialDueDate={pregnancy.due_date} />
+      ) : (
+        <p className="text-sm text-muted-foreground">Дані про вагітність не знайдено.</p>
+      )}
     </div>
-  );
+  )
 }
