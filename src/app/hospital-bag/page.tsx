@@ -1,8 +1,23 @@
-export default function Page() {
+import { householdRepository, itemsRepository } from "@/lib/repositories"
+import { SECTIONS } from "@/lib/sections"
+import { SectionChecklist } from "@/components/checklist/section-checklist"
+
+export default async function Page() {
+  const household = await householdRepository.getOrCreateDefaultHousehold()
+  const items = await itemsRepository.getItemsBySection(household.id, SECTIONS.hospitalBag.id)
+
   return (
-    <div className="flex flex-col gap-2">
-      <h1 className="text-3xl font-heading font-semibold">Сумка в пологовий</h1>
-      <p className="text-sm text-muted-foreground">Розділ у розробці.</p>
+    <div className="flex flex-col gap-6">
+      <h1 className="text-3xl font-heading font-semibold">{SECTIONS.hospitalBag.title_uk}</h1>
+      <SectionChecklist
+        sectionId={SECTIONS.hospitalBag.id}
+        initialItems={items}
+        subsections={[
+          { key: "mom", title: "Мама" },
+          { key: "baby", title: "Малюк" },
+          { key: "dad", title: "Тато" },
+        ]}
+      />
     </div>
-  );
+  )
 }

@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import type { Item } from "@/lib/types"
+import type { Item, Subsection } from "@/lib/types"
 import { toggleItemAction, addItemAction, deleteItemAction } from "@/lib/actions/checklist-actions"
 
 type OptimisticAction =
@@ -64,12 +65,43 @@ function ChecklistRow({
   )
 }
 
+function ChecklistList({
+  items,
+  isPending,
+  onToggle,
+  onDelete,
+}: {
+  items: Item[]
+  isPending: boolean
+  onToggle: (item: Item) => void
+  onDelete: (item: Item) => void
+}) {
+  if (items.length === 0) {
+    return <p className="text-sm text-muted-foreground">Поки немає пунктів. Додайте перший.</p>
+  }
+  return (
+    <ul className="flex flex-col gap-1">
+      {items.map((item) => (
+        <ChecklistRow
+          key={item.id}
+          item={item}
+          isPending={isPending}
+          onToggle={() => onToggle(item)}
+          onDelete={() => onDelete(item)}
+        />
+      ))}
+    </ul>
+  )
+}
+
 export function SectionChecklist({
   sectionId,
   initialItems,
+  subsections,
 }: {
   sectionId: string
   initialItems: Item[]
+  subsections?: { key: Subsection; title: string }[]
 }) {
   const path = usePathname()
   const [optimisticItems, applyOptimistic] = useOptimistic(initialItems, reduceOptimistic)
@@ -98,12 +130,12 @@ export function SectionChecklist({
     })
   }
 
-  function handleAdd(title: string, price: number | null) {
+  function handleAdd(title: string, price: number | null, subsection: Subsection | null = null) {
     const newItem: Item = {
       id: crypto.randomUUID(),
       household_id: "",
       section_id: sectionId,
-      subsection: null,
+      subsection,
       title,
       price,
       is_checked: false,
@@ -115,7 +147,7 @@ export function SectionChecklist({
     startTransition(async () => {
       applyOptimistic({ type: "add", item: newItem })
       try {
-        await addItemAction(path, sectionId, newItem.id, newItem.title, newItem.price)
+        await addItemAction(path, sectionId, newItem.id, newItem.title, newItem.price, subsection)
       } catch {
         toast.error("Не вдалось додати пункт. Спробуйте ще раз.")
       }
@@ -125,21 +157,21 @@ export function SectionChecklist({
   const sorted = optimisticItems.slice().sort((a, b) => a.sort_order - b.sort_order)
 
   return (
-    <div className="flex flex-col gap-4">
-      {sorted.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Поки немає пунктів. Додайте перший.</p>
-      ) : (
-        <ul className="flex flex-col gap-1">
-          {sorted.map((item) => (
-            <ChecklistRow
-              key={item.id}
-              item={item}
+    <div className="flex flex-col gap-6">
+      {subsections ? (
+        subsections.map((group) => (
+          <div key={group.key} className="flex flex-col gap-2">
+            <h2 className="text-base font-heading font-medium">{group.title}</h2>
+            <ChecklistList
+              items={sorted.filter((item) => item.subsection === group.key)}
               isPending={isPending}
-              onToggle={() => handleToggle(item)}
-              onDelete={() => handleDelete(item)}
+              onToggle={handleToggle}
+              onDelete={handleDelete}
             />
-          ))}
-        </ul>
+          </div>
+        ))
+      ) : (
+        <ChecklistList items={sorted} isPending={isPending} onToggle={handleToggle} onDelete={handleDelete} />
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -161,7 +193,10 @@ export function SectionChecklist({
               const priceRaw = String(formData.get("price") ?? "").trim()
               const parsedPrice = priceRaw ? Number(priceRaw) : null
               const price = parsedPrice !== null && Number.isFinite(parsedPrice) ? parsedPrice : null
-              handleAdd(title, price)
+              const subsectionRaw = formData.get("subsection")
+              const subsection = subsections ? (String(subsectionRaw) as Subsection) : null
+              if (subsections && !subsection) return
+              handleAdd(title, price, subsection)
             }}
           >
             <div className="flex flex-col gap-2">
@@ -172,6 +207,27 @@ export function SectionChecklist({
               <Label htmlFor="price">Ціна, грн (опціонально)</Label>
               <Input id="price" name="price" type="number" min="0" step="0.01" inputMode="decimal" />
             </div>
+            {subsections && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="subsection">Кому</Label>
+                <Select
+                  name="subsection"
+                  required
+                  items={subsections.map((group) => ({ value: group.key, label: group.title }))}
+                >
+                  <SelectTrigger id="subsection">
+                    <SelectValue placeholder="Оберіть" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subsections.map((group) => (
+                      <SelectItem key={group.key} value={group.key}>
+                        {group.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <DialogFooter>
               <Button type="submit">Додати</Button>
             </DialogFooter>
