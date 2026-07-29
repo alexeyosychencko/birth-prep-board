@@ -229,7 +229,9 @@ export function SectionChecklist({
               </div>
             )}
             <DialogFooter>
-              <Button type="submit">Додати</Button>
+              <Button type="submit" disabled={isPending}>
+                Додати
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
