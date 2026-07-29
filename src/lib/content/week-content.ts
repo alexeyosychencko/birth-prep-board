@@ -30,5 +30,6 @@ export const weekContent: WeekContent[] = [
 
 export function getWeekContent(week: number): WeekContent {
   const found = weekContent.find((entry) => entry.week === week)
-  return found ?? weekContent[0]!
+  if (!found) throw new Error(`No week content for week ${week} — expected 20-40`)
+  return found
 }
