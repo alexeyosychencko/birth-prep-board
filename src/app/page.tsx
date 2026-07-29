@@ -3,7 +3,7 @@ import {
   PREGNANCY_WEEK_MAX,
   PREGNANCY_WEEK_MIN,
 } from "@/lib/pregnancy"
-import { getWeekContent } from "@/lib/mock/week-content"
+import { getWeekContent } from "@/lib/content/week-content"
 import { MOCK_CHECKLIST_PROGRESS, MOCK_DUE_DATE } from "@/lib/mock/household"
 import {
   Card,
