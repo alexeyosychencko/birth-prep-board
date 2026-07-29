@@ -1,12 +1,15 @@
 import { SECTIONS } from "@/lib/sections"
 import type { SeedItem } from "@/lib/types"
 
+// These ids are permanent constants — like the section uuids in
+// src/lib/sections.ts, they will seed the Phase 2 Supabase migration
+// unchanged, so they must be valid uuid literals from the start.
 const nextOrder: Record<string, number> = {}
 function seed(sectionId: string, title: string, defaultPrice: number | null, subsection: SeedItem["subsection"] = null, idSuffix: string): SeedItem {
   const key = sectionId + (subsection ?? "")
   nextOrder[key] = (nextOrder[key] ?? 0) + 1
   return {
-    id: `c2b3d440-${idSuffix}`,
+    id: `c2b3d440-0000-4000-9000-${idSuffix.padStart(12, "0")}`,
     section_id: sectionId,
     subsection,
     title,
