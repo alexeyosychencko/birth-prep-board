@@ -12,6 +12,7 @@ export function DueDateForm({ initialDueDate }: { initialDueDate: string }) {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!dueDate) return
     const previous = dueDate
     startTransition(async () => {
       try {
@@ -33,6 +34,7 @@ export function DueDateForm({ initialDueDate }: { initialDueDate: string }) {
           value={dueDate}
           onChange={(event) => setDueDate(event.target.value)}
           disabled={isPending}
+          required
         />
       </div>
       <Button type="submit" disabled={isPending}>Зберегти</Button>
