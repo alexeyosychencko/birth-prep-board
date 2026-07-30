@@ -40,6 +40,7 @@ function createDefaultHouseholdState(): StoreShape {
     id: crypto.randomUUID(),
     household_id: householdId,
     goal_amount: 0,
+    spent_amount: 0,
   }
 
   const items: Record<string, Item> = {}
