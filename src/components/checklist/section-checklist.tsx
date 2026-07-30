@@ -175,7 +175,12 @@ export function SectionChecklist({
     })
   }
 
-  function handleAdd(title: string, price: number | null, subsection: Subsection | null = null) {
+  function handleAdd(
+    title: string,
+    price: number | null,
+    subsection: Subsection | null = null,
+    targetWeek: number | null = null
+  ) {
     const newItem: Item = {
       id: crypto.randomUUID(),
       household_id: "",
@@ -183,6 +188,7 @@ export function SectionChecklist({
       subsection,
       title,
       price,
+      target_week: targetWeek,
       is_checked: false,
       is_seed: false,
       sort_order: Number.MAX_SAFE_INTEGER,
@@ -192,7 +198,7 @@ export function SectionChecklist({
     startTransition(async () => {
       applyOptimistic({ type: "add", item: newItem })
       try {
-        await addItemAction(path, sectionId, newItem.id, newItem.title, newItem.price, subsection)
+        await addItemAction(path, sectionId, newItem.id, newItem.title, newItem.price, subsection, targetWeek)
       } catch {
         toast.error("Не вдалось додати пункт. Спробуйте ще раз.")
       }
@@ -245,10 +251,16 @@ export function SectionChecklist({
               const priceRaw = String(formData.get("price") ?? "").trim()
               const parsedPrice = priceRaw ? Number(priceRaw) : null
               const price = parsedPrice !== null && Number.isFinite(parsedPrice) ? parsedPrice : null
+              const targetWeekRaw = String(formData.get("target_week") ?? "").trim()
+              const parsedTargetWeek = targetWeekRaw ? Number(targetWeekRaw) : null
+              const targetWeek =
+                parsedTargetWeek !== null && Number.isInteger(parsedTargetWeek) && parsedTargetWeek >= 1 && parsedTargetWeek <= 42
+                  ? parsedTargetWeek
+                  : null
               const subsectionRaw = formData.get("subsection")
               const subsection = subsections ? (String(subsectionRaw) as Subsection) : null
               if (subsections && !subsection) return
-              handleAdd(title, price, subsection)
+              handleAdd(title, price, subsection, targetWeek)
             }}
           >
             <div className="flex flex-col gap-2">
@@ -258,6 +270,10 @@ export function SectionChecklist({
             <div className="flex flex-col gap-2">
               <Label htmlFor="price">Ціна, грн (опціонально)</Label>
               <Input id="price" name="price" type="number" min="0" step="0.01" inputMode="decimal" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="target_week">Тиждень, до якого зробити (опціонально)</Label>
+              <Input id="target_week" name="target_week" type="number" min="1" max="42" step="1" inputMode="numeric" />
             </div>
             {subsections && (
               <div className="flex flex-col gap-2">
