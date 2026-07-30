@@ -64,26 +64,28 @@ export function AppSidebar() {
   const otherItems = navItems.filter((item) => item.group === "other")
 
   return (
-    <Sidebar collapsible="icon" className="print:hidden">
-      <SidebarHeader>
-        <span className="px-2 text-sm font-heading font-semibold">
-          Birth Prep Board
-        </span>
-      </SidebarHeader>
-      <SidebarContent>
-        <NavGroup
-          label="Розділи"
-          items={checklistItems}
-          pathname={pathname}
-          isMobile={isMobile}
-          setOpenMobile={setOpenMobile}
-        />
-        <NavGroup label="Інше" items={otherItems} pathname={pathname} isMobile={isMobile} setOpenMobile={setOpenMobile} />
-      </SidebarContent>
-      <SidebarFooter>
-        <ThemeToggle />
-      </SidebarFooter>
-      <SidebarRail className="print:hidden" />
-    </Sidebar>
+    <div className="print:hidden">
+      <Sidebar collapsible="icon">
+        <SidebarHeader>
+          <span className="px-2 text-sm font-heading font-semibold">
+            Birth Prep Board
+          </span>
+        </SidebarHeader>
+        <SidebarContent>
+          <NavGroup
+            label="Розділи"
+            items={checklistItems}
+            pathname={pathname}
+            isMobile={isMobile}
+            setOpenMobile={setOpenMobile}
+          />
+          <NavGroup label="Інше" items={otherItems} pathname={pathname} isMobile={isMobile} setOpenMobile={setOpenMobile} />
+        </SidebarContent>
+        <SidebarFooter>
+          <ThemeToggle />
+        </SidebarFooter>
+        <SidebarRail className="print:hidden" />
+      </Sidebar>
+    </div>
   )
 }
