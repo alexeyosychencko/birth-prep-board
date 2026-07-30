@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { ItemToggle } from "@/components/dashboard/item-toggle"
+import { AddItemDialog } from "@/components/checklist/add-item-dialog"
 import type { Item } from "@/lib/types"
 
 const VISIBLE_COUNT = 8
@@ -14,7 +15,10 @@ export function DueChecklist({
   if (items.length === 0) {
     return (
       <div className="flex flex-col gap-1">
-        <h2 className="text-base font-heading font-medium">Пора зробити</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-base font-heading font-medium">Пора зробити</h2>
+          <AddItemDialog triggerVariant="default" />
+        </div>
         <p className="text-sm text-muted-foreground">
           Усе під контролем — прострочених пунктів немає.
         </p>
@@ -27,7 +31,10 @@ export function DueChecklist({
 
   return (
     <div className="flex flex-col gap-2">
-      <h2 className="text-base font-heading font-medium">Пора зробити</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-base font-heading font-medium">Пора зробити</h2>
+        <AddItemDialog triggerVariant="default" />
+      </div>
       <ul className="flex flex-col gap-1">
         {visible.map((item) => (
           <DueRow key={item.id} item={item} sectionTitle={sectionTitleById[item.section_id]} />
@@ -52,12 +59,12 @@ export function DueChecklist({
 function DueRow({ item, sectionTitle }: { item: Item; sectionTitle: string }) {
   return (
     <li className="flex items-center gap-3 py-1.5">
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-xs text-muted-foreground">{sectionTitle}</span>
+      <ItemToggle item={item} />
+      <div className="flex min-w-0 flex-1 items-baseline gap-2">
         <span className="truncate text-sm">{item.title}</span>
+        <span className="shrink-0 text-xs text-muted-foreground">{sectionTitle}</span>
       </div>
       <Badge variant="secondary" className="shrink-0">{`до ${item.target_week} тижня`}</Badge>
-      <ItemToggle item={item} />
     </li>
   )
 }

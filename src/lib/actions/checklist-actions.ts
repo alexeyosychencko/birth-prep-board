@@ -57,3 +57,19 @@ export async function updateItemPriceAction(path: string, itemId: string, price:
   revalidatePath("/")
   revalidatePath("/budget")
 }
+
+export async function updateItemTargetWeekAction(
+  path: string,
+  itemId: string,
+  targetWeek: number | null
+): Promise<void> {
+  if (targetWeek !== null && !(Number.isInteger(targetWeek) && targetWeek >= 1 && targetWeek <= 42)) {
+    throw new Error("Invalid target week")
+  }
+
+  const household = await householdRepository.getOrCreateDefaultHousehold()
+  await itemsRepository.updateItemTargetWeek(household.id, itemId, targetWeek)
+  revalidatePath(path)
+  revalidatePath("/")
+  revalidatePath("/budget")
+}

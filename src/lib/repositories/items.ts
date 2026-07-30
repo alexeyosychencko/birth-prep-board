@@ -18,5 +18,6 @@ export interface ItemsRepository {
   ): Promise<Item>
   toggleItem(householdId: string, itemId: string): Promise<void>
   updateItemPrice(householdId: string, itemId: string, price: number | null): Promise<void>
+  updateItemTargetWeek(householdId: string, itemId: string, targetWeek: number | null): Promise<void>
   deleteItem(householdId: string, itemId: string): Promise<void>
 }

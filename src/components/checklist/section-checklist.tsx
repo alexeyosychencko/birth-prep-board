@@ -10,11 +10,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AddItemDialog } from "@/components/checklist/add-item-dialog"
+import { TargetWeekField } from "@/components/checklist/target-week-field"
 import type { Item, Subsection } from "@/lib/types"
 import {
   toggleItemAction,
   deleteItemAction,
   updateItemPriceAction,
+  updateItemTargetWeekAction,
 } from "@/lib/actions/checklist-actions"
 
 type OptimisticAction =
@@ -22,6 +24,7 @@ type OptimisticAction =
   | { type: "add"; item: Item }
   | { type: "delete"; itemId: string }
   | { type: "updatePrice"; itemId: string; price: number | null }
+  | { type: "updateTargetWeek"; itemId: string; targetWeek: number | null }
 
 function reduceOptimistic(state: Item[], action: OptimisticAction): Item[] {
   switch (action.type) {
@@ -37,6 +40,10 @@ function reduceOptimistic(state: Item[], action: OptimisticAction): Item[] {
       return state.map((item) =>
         item.id === action.itemId ? { ...item, price: action.price } : item
       )
+    case "updateTargetWeek":
+      return state.map((item) =>
+        item.id === action.itemId ? { ...item, target_week: action.targetWeek } : item
+      )
   }
 }
 
@@ -46,12 +53,14 @@ function ChecklistRow({
   onToggle,
   onDelete,
   onUpdatePrice,
+  onUpdateTargetWeek,
 }: {
   item: Item
   isPending: boolean
   onToggle: () => void
   onDelete: () => void
   onUpdatePrice: (price: number | null) => void
+  onUpdateTargetWeek: (targetWeek: number | null) => void
 }) {
   return (
     <li className="flex items-center gap-3 py-1.5">
@@ -77,6 +86,7 @@ function ChecklistRow({
           onUpdatePrice(parsed)
         }}
       />
+      <TargetWeekField item={item} isPending={isPending} onUpdate={onUpdateTargetWeek} />
       {!item.is_seed && (
         <Button variant="ghost" size="icon-sm" aria-label="Видалити пункт" disabled={isPending} onClick={onDelete}>
           <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
@@ -92,12 +102,14 @@ function ChecklistList({
   onToggle,
   onDelete,
   onUpdatePrice,
+  onUpdateTargetWeek,
 }: {
   items: Item[]
   isPending: boolean
   onToggle: (item: Item) => void
   onDelete: (item: Item) => void
   onUpdatePrice: (item: Item, price: number | null) => void
+  onUpdateTargetWeek: (item: Item, targetWeek: number | null) => void
 }) {
   if (items.length === 0) {
     return <p className="text-sm text-muted-foreground">Поки немає пунктів. Додайте перший.</p>
@@ -112,6 +124,7 @@ function ChecklistList({
           onToggle={() => onToggle(item)}
           onDelete={() => onDelete(item)}
           onUpdatePrice={(price) => onUpdatePrice(item, price)}
+          onUpdateTargetWeek={(targetWeek) => onUpdateTargetWeek(item, targetWeek)}
         />
       ))}
     </ul>
@@ -164,6 +177,17 @@ export function SectionChecklist({
     })
   }
 
+  function handleUpdateTargetWeek(item: Item, targetWeek: number | null) {
+    startTransition(async () => {
+      applyOptimistic({ type: "updateTargetWeek", itemId: item.id, targetWeek })
+      try {
+        await updateItemTargetWeekAction(path, item.id, targetWeek)
+      } catch {
+        toast.error("Не вдалось оновити тиждень. Спробуйте ще раз.")
+      }
+    })
+  }
+
   const sorted = optimisticItems.slice().sort((a, b) => a.sort_order - b.sort_order)
 
   return (
@@ -178,6 +202,7 @@ export function SectionChecklist({
               onToggle={handleToggle}
               onDelete={handleDelete}
               onUpdatePrice={handleUpdatePrice}
+              onUpdateTargetWeek={handleUpdateTargetWeek}
             />
           </div>
         ))
@@ -188,6 +213,7 @@ export function SectionChecklist({
           onToggle={handleToggle}
           onDelete={handleDelete}
           onUpdatePrice={handleUpdatePrice}
+          onUpdateTargetWeek={handleUpdateTargetWeek}
         />
       )}
 

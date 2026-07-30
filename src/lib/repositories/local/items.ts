@@ -85,6 +85,13 @@ export const itemsRepository: ItemsRepository = {
     })
   },
 
+  async updateItemTargetWeek(householdId, itemId, targetWeek) {
+    await writeStore((store) => {
+      const item = assertOwnedItem(store.items, householdId, itemId)
+      item.target_week = targetWeek
+    })
+  },
+
   async deleteItem(householdId, itemId) {
     await writeStore((store) => {
       assertOwnedItem(store.items, householdId, itemId)
