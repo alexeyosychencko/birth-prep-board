@@ -22,5 +22,7 @@ export interface ItemsRepository {
   updateItemTargetWeek(householdId: string, itemId: string, targetWeek: number | null): Promise<void>
   /** Rewrites sort_order sequentially (1..N) for every item of the section, in the given order. */
   reorderItems(householdId: string, sectionId: string, orderedIds: string[]): Promise<void>
+  /** Applies { itemId, targetWeek } pairs in one batch — used by the bulk /settings/weeks screen. */
+  bulkUpdateTargetWeeks(householdId: string, updates: { itemId: string; targetWeek: number | null }[]): Promise<void>
   deleteItem(householdId: string, itemId: string): Promise<void>
 }

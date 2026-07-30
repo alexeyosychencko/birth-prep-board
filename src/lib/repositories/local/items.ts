@@ -113,6 +113,15 @@ export const itemsRepository: ItemsRepository = {
     })
   },
 
+  async bulkUpdateTargetWeeks(householdId, updates) {
+    await writeStore((store) => {
+      for (const { itemId, targetWeek } of updates) {
+        const item = assertOwnedItem(store.items, householdId, itemId)
+        item.target_week = targetWeek
+      }
+    })
+  },
+
   async deleteItem(householdId, itemId) {
     await writeStore((store) => {
       assertOwnedItem(store.items, householdId, itemId)

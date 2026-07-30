@@ -92,3 +92,21 @@ export async function reorderItemsAction(path: string, sectionId: string, ordere
   await itemsRepository.reorderItems(household.id, sectionId, orderedIds)
   revalidatePath(path)
 }
+
+export async function bulkUpdateTargetWeeksAction(
+  path: string,
+  updates: { itemId: string; targetWeek: number | null }[]
+): Promise<void> {
+  for (const { itemId, targetWeek } of updates) {
+    if (!UUID_RE.test(itemId)) throw new Error("Invalid item id")
+    if (targetWeek !== null && !(Number.isInteger(targetWeek) && targetWeek >= 1 && targetWeek <= 42)) {
+      throw new Error("Invalid target week")
+    }
+  }
+
+  const household = await householdRepository.getOrCreateDefaultHousehold()
+  await itemsRepository.bulkUpdateTargetWeeks(household.id, updates)
+  revalidatePath(path)
+  revalidatePath("/")
+  for (const section of SECTIONS_LIST) revalidatePath(`/${section.key}`)
+}
