@@ -305,8 +305,8 @@ export function SectionChecklist({
     const subset = new Set(orderedSubsetIds)
     let cursor = 0
     const fullOrder = sorted.map((item) => (subset.has(item.id) ? orderedSubsetIds[cursor++] : item.id))
-    applyOptimistic({ type: "reorder", orderedIds: fullOrder })
     startTransition(async () => {
+      applyOptimistic({ type: "reorder", orderedIds: fullOrder })
       try {
         await reorderItemsAction(path, sectionId, fullOrder)
       } catch {

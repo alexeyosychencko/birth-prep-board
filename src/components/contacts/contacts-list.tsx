@@ -151,8 +151,8 @@ export function ContactsList({ initialContacts }: { initialContacts: Contact[] }
   }
 
   function handleReorder(orderedIds: string[]) {
-    applyOptimistic({ type: "reorder", orderedIds })
     startTransition(async () => {
+      applyOptimistic({ type: "reorder", orderedIds })
       try {
         await reorderContactsAction(path, orderedIds)
       } catch {
