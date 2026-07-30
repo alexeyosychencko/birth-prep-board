@@ -1,6 +1,11 @@
 import { getCurrentWeek, getDaysUntilDue, DUE_DATE_WEEK } from "@/lib/pregnancy"
 import { getWeekContent } from "@/lib/content/week-content"
-import { householdRepository, pregnancyRepository, itemsRepository } from "@/lib/repositories"
+import {
+  householdRepository,
+  pregnancyRepository,
+  itemsRepository,
+  budgetRepository,
+} from "@/lib/repositories"
 import { SECTIONS_LIST } from "@/lib/sections"
 import {
   Card,
@@ -8,6 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Progress, ProgressLabel } from "@/components/ui/progress"
+import { ProgressValueText } from "@/components/progress-value-text"
 import { WeekTimeline } from "@/components/dashboard/week-timeline"
 import { DueChecklist } from "@/components/dashboard/due-checklist"
 import { UpcomingList } from "@/components/dashboard/upcoming-list"
@@ -20,9 +27,10 @@ export const dynamic = "force-dynamic"
 
 export default async function Page() {
   const household = await householdRepository.getOrCreateDefaultHousehold()
-  const [pregnancy, items] = await Promise.all([
+  const [pregnancy, items, budgetGoal] = await Promise.all([
     pregnancyRepository.getPregnancy(household.id),
     itemsRepository.getAllItems(household.id),
+    budgetRepository.getBudgetGoal(household.id),
   ])
 
   if (!pregnancy) {
@@ -41,6 +49,11 @@ export default async function Page() {
   const weekContent = getWeekContent(isOverdue ? DUE_DATE_WEEK : currentWeek)
   const done = items.filter((item) => item.is_checked).length
   const total = items.length
+  const checklistProgress = total > 0 ? (done / total) * 100 : 0
+  const budgetProgress =
+    budgetGoal.goal_amount > 0
+      ? Math.min(100, (budgetGoal.spent_amount / budgetGoal.goal_amount) * 100)
+      : 0
 
   const [dueItems, upcomingItems] = await Promise.all([
     itemsRepository.getItemsDueByWeek(household.id, currentWeek),
@@ -71,28 +84,58 @@ export default async function Page() {
         <WeekTimeline currentWeek={currentWeek} />
       </div>
 
-      <DueChecklist items={sortedDueItems} sectionTitleById={sectionTitleById} />
-      <UpcomingList items={upcomingItems} sectionTitleById={sectionTitleById} />
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:items-start">
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <DueChecklist items={sortedDueItems} sectionTitleById={sectionTitleById} />
+          <UpcomingList items={upcomingItems} sectionTitleById={sectionTitleById} />
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {weekContent
-              ? `Фокус тижня ${isOverdue ? "40+" : currentWeek}: ${weekContent.title}`
-              : "Фокус тижня"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-1">
-          <p className="text-sm">
-            {weekContent
-              ? weekContent.tip
-              : "Контент фокусу тижня починається з 20-го тижня вагітності."}
-          </p>
-          {isOverdue && (
-            <p className="text-sm text-muted-foreground">ПДР уже минув — можливо, малюк ось-ось народиться.</p>
-          )}
-        </CardContent>
-      </Card>
+        <div className="flex flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Чеклісти</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Progress value={checklistProgress}>
+                <ProgressLabel>Виконано пунктів</ProgressLabel>
+                <ProgressValueText value={`${done} з ${total}`} />
+              </Progress>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Бюджет</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Progress value={budgetProgress}>
+                <ProgressLabel>Витрачено</ProgressLabel>
+                <ProgressValueText value={`${budgetGoal.spent_amount} з ${budgetGoal.goal_amount} грн`} />
+              </Progress>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {weekContent
+                  ? `Фокус тижня ${isOverdue ? "40+" : currentWeek}: ${weekContent.title}`
+                  : "Фокус тижня"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1">
+              <p className="text-sm">
+                {weekContent
+                  ? weekContent.tip
+                  : "Контент фокусу тижня починається з 20-го тижня вагітності."}
+              </p>
+              {isOverdue && (
+                <p className="text-sm text-muted-foreground">ПДР уже минув — можливо, малюк ось-ось народиться.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
