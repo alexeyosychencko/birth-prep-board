@@ -26,7 +26,27 @@ export const itemsRepository: ItemsRepository = {
     )
   },
 
-  async addItem(householdId, sectionId, id, title, price, subsection = null) {
+  async getItemsDueByWeek(householdId, week) {
+    return readStore((store) =>
+      Object.values(store.items).filter(
+        (item) =>
+          item.household_id === householdId &&
+          !item.is_checked &&
+          item.target_week !== null &&
+          item.target_week <= week
+      )
+    )
+  },
+
+  async getItemsForTargetWeek(householdId, week) {
+    return readStore((store) =>
+      Object.values(store.items).filter(
+        (item) => item.household_id === householdId && !item.is_checked && item.target_week === week
+      )
+    )
+  },
+
+  async addItem(householdId, sectionId, id, title, price, subsection = null, targetWeek = null) {
     return writeStore((store) => {
       const siblings = Object.values(store.items).filter(
         (item) => item.household_id === householdId && item.section_id === sectionId
@@ -40,6 +60,7 @@ export const itemsRepository: ItemsRepository = {
         subsection: subsection ?? null,
         title,
         price: price ?? null,
+        target_week: targetWeek ?? null,
         is_checked: false,
         is_seed: false,
         sort_order: nextSortOrder,

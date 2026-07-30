@@ -21,16 +21,20 @@ export async function addItemAction(
   id: string,
   title: string,
   price: number | null,
-  subsection: Subsection | null = null
+  subsection: Subsection | null = null,
+  targetWeek: number | null = null
 ): Promise<void> {
   if (!UUID_RE.test(id)) throw new Error("Invalid item id")
   const trimmedTitle = title.trim()
   if (!trimmedTitle) throw new Error("Title is required")
   if (price !== null && !(Number.isFinite(price) && price >= 0)) throw new Error("Invalid price")
   if (!SECTIONS_LIST.some((section) => section.id === sectionId)) throw new Error("Invalid section id")
+  if (targetWeek !== null && !(Number.isInteger(targetWeek) && targetWeek >= 1 && targetWeek <= 42)) {
+    throw new Error("Invalid target week")
+  }
 
   const household = await householdRepository.getOrCreateDefaultHousehold()
-  await itemsRepository.addItem(household.id, sectionId, id, trimmedTitle, price, subsection)
+  await itemsRepository.addItem(household.id, sectionId, id, trimmedTitle, price, subsection, targetWeek)
   revalidatePath(path)
   revalidatePath("/")
   revalidatePath("/budget")

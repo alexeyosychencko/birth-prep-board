@@ -42,6 +42,7 @@ export interface SeedItem {
   subsection: Subsection | null
   title: string
   default_price: number | null
+  target_week: number | null
   sort_order: number
 }
 
@@ -52,6 +53,7 @@ export interface Item {
   subsection: Subsection | null
   title: string
   price: number | null
+  target_week: number | null
   is_checked: boolean
   is_seed: boolean
   sort_order: number

@@ -6,7 +6,13 @@ import type { SeedItem } from "@/lib/types"
 // unchanged, so they must be valid uuid literals from the start.
 let counter = 0
 const nextOrder: Record<string, number> = {}
-function seed(sectionId: string, title: string, defaultPrice: number | null, subsection: SeedItem["subsection"] = null): SeedItem {
+function seed(
+  sectionId: string,
+  title: string,
+  defaultPrice: number | null,
+  subsection: SeedItem["subsection"] = null,
+  targetWeek: number | null = null
+): SeedItem {
   counter += 1
   const key = sectionId + (subsection ?? "")
   nextOrder[key] = (nextOrder[key] ?? 0) + 1
@@ -16,6 +22,7 @@ function seed(sectionId: string, title: string, defaultPrice: number | null, sub
     subsection,
     title,
     default_price: defaultPrice,
+    target_week: targetWeek,
     sort_order: nextOrder[key],
   }
 }

@@ -51,6 +51,7 @@ function createDefaultHouseholdState(): StoreShape {
       subsection: seed.subsection,
       title: seed.title,
       price: seed.default_price,
+      target_week: seed.target_week,
       is_checked: false,
       is_seed: true,
       sort_order: seed.sort_order,

@@ -10,6 +10,7 @@ function item(overrides: Partial<Item>): Item {
     subsection: null,
     title: "x",
     price: null,
+    target_week: null,
     is_checked: false,
     is_seed: false,
     sort_order: 1,
