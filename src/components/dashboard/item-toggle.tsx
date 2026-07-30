@@ -4,21 +4,22 @@ import { useOptimistic, useTransition } from "react"
 import { toast } from "sonner"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import type { Item } from "@/lib/types"
-import { toggleItemAction } from "@/lib/actions/checklist-actions"
+import type { Item, ItemStatus } from "@/lib/types"
+import { setItemStatusAction } from "@/lib/actions/checklist-actions"
 
 export function ItemToggle({ item }: { item: Item }) {
-  const [isChecked, setOptimisticChecked] = useOptimistic(
-    item.is_checked,
-    (_current: boolean, next: boolean) => next
+  const [status, setOptimisticStatus] = useOptimistic(
+    item.status,
+    (_current: ItemStatus, next: ItemStatus) => next
   )
   const [isPending, startTransition] = useTransition()
 
   function handleToggle() {
+    const next: ItemStatus = status === "done" ? "todo" : "done"
     startTransition(async () => {
-      setOptimisticChecked(!isChecked)
+      setOptimisticStatus(next)
       try {
-        await toggleItemAction("/", item.id)
+        await setItemStatusAction("/", item.id, next)
       } catch {
         toast.error("Не вдалось оновити пункт. Спробуйте ще раз.")
       }
@@ -27,7 +28,7 @@ export function ItemToggle({ item }: { item: Item }) {
 
   return (
     <Checkbox
-      checked={isChecked}
+      checked={status === "done"}
       onCheckedChange={handleToggle}
       disabled={isPending}
       aria-label={`Позначити «${item.title}» виконаним`}

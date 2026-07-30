@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { ItemToggle } from "@/components/dashboard/item-toggle"
 import { AddItemDialog } from "@/components/checklist/add-item-dialog"
+import { formatWeekBadgeLabel } from "@/components/checklist/target-week-field"
 import type { Item } from "@/lib/types"
 
 const VISIBLE_COUNT = 8
@@ -8,9 +9,11 @@ const VISIBLE_COUNT = 8
 export function DueChecklist({
   items,
   sectionTitleById,
+  currentWeek,
 }: {
   items: Item[]
   sectionTitleById: Record<string, string>
+  currentWeek: number
 }) {
   if (items.length === 0) {
     return (
@@ -37,7 +40,7 @@ export function DueChecklist({
       </div>
       <ul className="flex flex-col gap-1">
         {visible.map((item) => (
-          <DueRow key={item.id} item={item} sectionTitle={sectionTitleById[item.section_id]} />
+          <DueRow key={item.id} item={item} sectionTitle={sectionTitleById[item.section_id]} currentWeek={currentWeek} />
         ))}
       </ul>
       {rest.length > 0 && (
@@ -47,7 +50,7 @@ export function DueChecklist({
           </summary>
           <ul className="mt-1 flex flex-col gap-1">
             {rest.map((item) => (
-              <DueRow key={item.id} item={item} sectionTitle={sectionTitleById[item.section_id]} />
+              <DueRow key={item.id} item={item} sectionTitle={sectionTitleById[item.section_id]} currentWeek={currentWeek} />
             ))}
           </ul>
         </details>
@@ -56,15 +59,28 @@ export function DueChecklist({
   )
 }
 
-function DueRow({ item, sectionTitle }: { item: Item; sectionTitle: string }) {
+function DueRow({
+  item,
+  sectionTitle,
+  currentWeek,
+}: {
+  item: Item
+  sectionTitle: string
+  currentWeek: number
+}) {
   return (
     <li className="flex items-center gap-3 py-1.5">
       <ItemToggle item={item} />
       <div className="flex min-w-0 flex-1 items-baseline gap-2">
         <span className="truncate text-sm">{item.title}</span>
         <span className="shrink-0 text-xs text-muted-foreground">{sectionTitle}</span>
+        {item.status === "in_progress" && (
+          <Badge className="shrink-0 bg-accent text-accent-foreground">в процесі</Badge>
+        )}
       </div>
-      <Badge variant="secondary" className="shrink-0">{`до ${item.target_week} тижня`}</Badge>
+      <Badge variant="secondary" className="shrink-0">
+        {formatWeekBadgeLabel(item.target_week!, currentWeek)}
+      </Badge>
     </li>
   )
 }

@@ -49,7 +49,7 @@ export default async function Page() {
   const daysUntilDue = getDaysUntilDue(dueDate)
   const isOverdue = currentWeek > DUE_DATE_WEEK
   const weekContent = getWeekContent(isOverdue ? DUE_DATE_WEEK : currentWeek)
-  const done = items.filter((item) => item.is_checked).length
+  const done = items.filter((item) => item.status === "done").length
   const total = items.length
   const checklistProgress = total > 0 ? (done / total) * 100 : 0
 
@@ -65,7 +65,7 @@ export default async function Page() {
     const sectionItems = items.filter((item) => item.section_id === section.id)
     return {
       section,
-      done: sectionItems.filter((item) => item.is_checked).length,
+      done: sectionItems.filter((item) => item.status === "done").length,
       total: sectionItems.length,
     }
   })
@@ -93,7 +93,7 @@ export default async function Page() {
 
       <div className="flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:items-start">
         <div className="flex flex-col gap-6 lg:col-span-2">
-          <DueChecklist items={sortedDueItems} sectionTitleById={sectionTitleById} />
+          <DueChecklist items={sortedDueItems} sectionTitleById={sectionTitleById} currentWeek={currentWeek} />
           <UpcomingList items={upcomingItems} sectionTitleById={sectionTitleById} />
         </div>
 
