@@ -85,7 +85,9 @@ function ContactRow({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AddContactDialog contact={contact} open={editOpen} onOpenChange={setEditOpen} onSaved={onSaved} />
+      {editOpen && (
+        <AddContactDialog contact={contact} open={editOpen} onOpenChange={setEditOpen} onSaved={onSaved} />
+      )}
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
