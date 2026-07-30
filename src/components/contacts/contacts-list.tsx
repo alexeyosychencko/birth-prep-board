@@ -26,12 +26,14 @@ import {
 } from "@/components/ui/alert-dialog"
 import { AddContactDialog } from "@/components/contacts/add-contact-dialog"
 import { PhoneField } from "@/components/contacts/phone-field"
+import { DragHandle, SortableListProvider, useSortableRow } from "@/components/sortable-list"
 import type { Contact } from "@/lib/types"
-import { deleteContactAction } from "@/lib/actions/contacts-actions"
+import { deleteContactAction, reorderContactsAction } from "@/lib/actions/contacts-actions"
 
 type OptimisticAction =
   | { type: "save"; contact: Contact }
   | { type: "delete"; contactId: string }
+  | { type: "reorder"; orderedIds: string[] }
 
 function reduceOptimistic(state: Contact[], action: OptimisticAction): Contact[] {
   switch (action.type) {
@@ -43,6 +45,13 @@ function reduceOptimistic(state: Contact[], action: OptimisticAction): Contact[]
     }
     case "delete":
       return state.filter((contact) => contact.id !== action.contactId)
+    case "reorder": {
+      const sortOrderById = new Map(action.orderedIds.map((id, index) => [id, index + 1]))
+      return state.map((contact) => {
+        const nextSortOrder = sortOrderById.get(contact.id)
+        return nextSortOrder === undefined ? contact : { ...contact, sort_order: nextSortOrder }
+      })
+    }
   }
 }
 
@@ -59,9 +68,21 @@ function ContactRow({
 }) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const sortable = useSortableRow(contact.id)
 
+  /* eslint-disable react-hooks/refs -- dnd-kit's useSortable returns setNodeRef/
+     attributes/listeners bundled with other data; this rule treats the whole
+     object as ref-like and flags every property access, a false positive for
+     this documented API. */
   return (
-    <li className="flex items-center gap-3 py-1.5">
+    <li
+      ref={sortable.setNodeRef}
+      style={sortable.style}
+      data-dragging={sortable.isDragging || undefined}
+      className="flex items-center gap-3 py-1.5 data-dragging:relative data-dragging:z-10 data-dragging:bg-background"
+    >
+      <DragHandle attributes={sortable.attributes} listeners={sortable.listeners} />
+      {/* eslint-enable react-hooks/refs */}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-baseline gap-2">
           <span className="truncate text-sm">{contact.name}</span>
@@ -129,6 +150,17 @@ export function ContactsList({ initialContacts }: { initialContacts: Contact[] }
     })
   }
 
+  function handleReorder(orderedIds: string[]) {
+    applyOptimistic({ type: "reorder", orderedIds })
+    startTransition(async () => {
+      try {
+        await reorderContactsAction(path, orderedIds)
+      } catch {
+        toast.error("Не вдалось зберегти порядок. Спробуйте ще раз.")
+      }
+    })
+  }
+
   const sorted = optimisticContacts.slice().sort((a, b) => a.sort_order - b.sort_order)
 
   if (sorted.length === 0) {
@@ -145,17 +177,19 @@ export function ContactsList({ initialContacts }: { initialContacts: Contact[] }
 
   return (
     <div className="flex flex-col gap-6">
-      <ul className="flex flex-col gap-1">
-        {sorted.map((contact) => (
-          <ContactRow
-            key={contact.id}
-            contact={contact}
-            isPending={isPending}
-            onSaved={handleSaved}
-            onDelete={() => handleDelete(contact)}
-          />
-        ))}
-      </ul>
+      <SortableListProvider items={sorted} onReorder={handleReorder}>
+        <ul className="flex flex-col gap-1">
+          {sorted.map((contact) => (
+            <ContactRow
+              key={contact.id}
+              contact={contact}
+              isPending={isPending}
+              onSaved={handleSaved}
+              onDelete={() => handleDelete(contact)}
+            />
+          ))}
+        </ul>
+      </SortableListProvider>
       <AddContactDialog triggerVariant="outline" onSaved={handleSaved} />
     </div>
   )

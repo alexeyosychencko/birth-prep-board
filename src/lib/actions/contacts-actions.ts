@@ -66,6 +66,14 @@ export async function updateContactNoteAction(path: string, contactId: string, n
   revalidatePath(path)
 }
 
+export async function reorderContactsAction(path: string, orderedIds: string[]): Promise<void> {
+  if (!orderedIds.every((id) => UUID_RE.test(id))) throw new Error("Invalid contact id")
+
+  const household = await householdRepository.getOrCreateDefaultHousehold()
+  await contactsRepository.reorderContacts(household.id, orderedIds)
+  revalidatePath(path)
+}
+
 export async function deleteContactAction(path: string, contactId: string): Promise<void> {
   const household = await householdRepository.getOrCreateDefaultHousehold()
   await contactsRepository.deleteContact(household.id, contactId)

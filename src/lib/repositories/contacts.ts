@@ -14,5 +14,7 @@ export interface ContactsRepository {
   updateContactRole(householdId: string, contactId: string, role: string | null): Promise<void>
   updateContactPhone(householdId: string, contactId: string, phone: string | null): Promise<void>
   updateContactNote(householdId: string, contactId: string, note: string | null): Promise<void>
+  /** Rewrites sort_order sequentially (1..N) for every contact of the household, in the given order. */
+  reorderContacts(householdId: string, orderedIds: string[]): Promise<void>
   deleteContact(householdId: string, contactId: string): Promise<void>
 }

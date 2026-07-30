@@ -68,6 +68,19 @@ export const contactsRepository: ContactsRepository = {
     })
   },
 
+  async reorderContacts(householdId, orderedIds) {
+    await writeStore((store) => {
+      const householdContacts = Object.values(store.contacts).filter(
+        (contact) => contact.household_id === householdId
+      )
+      const bySortOrder = new Map(orderedIds.map((id, index) => [id, index + 1]))
+      for (const contact of householdContacts) {
+        const nextSortOrder = bySortOrder.get(contact.id)
+        if (nextSortOrder !== undefined) contact.sort_order = nextSortOrder
+      }
+    })
+  },
+
   async deleteContact(householdId, contactId) {
     await writeStore((store) => {
       assertOwnedContact(store.contacts, householdId, contactId)
