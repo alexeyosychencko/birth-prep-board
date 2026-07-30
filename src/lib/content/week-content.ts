@@ -28,8 +28,6 @@ export const weekContent: WeekContent[] = [
   { week: 40, title: "Очікуваний ПДР", tip: "Післяпологовий чекліст вже можна переглянути наперед — розділ «Післяпологовий період»." },
 ]
 
-export function getWeekContent(week: number): WeekContent {
-  const found = weekContent.find((entry) => entry.week === week)
-  if (!found) throw new Error(`No week content for week ${week} — expected 20-40`)
-  return found
+export function getWeekContent(week: number): WeekContent | null {
+  return weekContent.find((entry) => entry.week === week) ?? null
 }

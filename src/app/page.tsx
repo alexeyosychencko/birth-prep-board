@@ -1,8 +1,4 @@
-import {
-  getCurrentWeek,
-  PREGNANCY_WEEK_MAX,
-  PREGNANCY_WEEK_MIN,
-} from "@/lib/pregnancy"
+import { getCurrentWeek, DUE_DATE_WEEK } from "@/lib/pregnancy"
 import { getWeekContent } from "@/lib/content/week-content"
 import { householdRepository, pregnancyRepository, itemsRepository } from "@/lib/repositories"
 import {
@@ -37,8 +33,7 @@ export default async function Page() {
 
   const currentWeek = getCurrentWeek(new Date(pregnancy.due_date))
   const weekContent = getWeekContent(currentWeek)
-  const weekProgress =
-    ((currentWeek - PREGNANCY_WEEK_MIN) / (PREGNANCY_WEEK_MAX - PREGNANCY_WEEK_MIN)) * 100
+  const weekProgress = Math.min(100, (currentWeek / DUE_DATE_WEEK) * 100)
   const done = items.filter((item) => item.is_checked).length
   const total = items.length
   const checklistProgress = total > 0 ? (done / total) * 100 : 0
@@ -58,10 +53,16 @@ export default async function Page() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{`Фокус тижня ${currentWeek}: ${weekContent.title}`}</CardTitle>
+          <CardTitle>
+            {weekContent ? `Фокус тижня ${currentWeek}: ${weekContent.title}` : "Фокус тижня"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm">{weekContent.tip}</p>
+          <p className="text-sm">
+            {weekContent
+              ? weekContent.tip
+              : "Контент фокусу тижня починається з 20-го тижня вагітності."}
+          </p>
         </CardContent>
       </Card>
     </div>
