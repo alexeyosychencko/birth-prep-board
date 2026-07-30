@@ -16,6 +16,13 @@ export function PriceField({
   onUpdate: (price: number | null) => void
 }) {
   const [editing, setEditing] = useState(false)
+  const [priceSnapshot, setPriceSnapshot] = useState(item.price)
+  const [value, setValue] = useState(() => (item.price === null ? "" : String(item.price)))
+
+  if (item.price !== priceSnapshot) {
+    setPriceSnapshot(item.price)
+    setValue(item.price === null ? "" : String(item.price))
+  }
 
   if (item.price !== null || editing) {
     return (
@@ -25,7 +32,8 @@ export function PriceField({
         step="0.01"
         inputMode="decimal"
         aria-label="Ціна, грн"
-        defaultValue={item.price ?? ""}
+        value={value}
+        onChange={(event) => setValue(event.currentTarget.value)}
         disabled={isPending}
         autoFocus={editing && item.price === null}
         className="h-8 w-20 text-right text-sm text-muted-foreground"
@@ -33,16 +41,18 @@ export function PriceField({
           const raw = event.currentTarget.value.trim()
           if (raw === "") {
             setEditing(false)
+            setValue("")
             if (item.price !== null) onUpdate(null)
             return
           }
           const parsed = Number(raw)
           if (Number.isNaN(parsed) || parsed < 0) {
-            event.currentTarget.value = item.price === null ? "" : String(item.price)
+            setValue(item.price === null ? "" : String(item.price))
             return
           }
           setEditing(false)
           if (parsed === item.price) return
+          setValue(String(parsed))
           onUpdate(parsed)
         }}
       />
