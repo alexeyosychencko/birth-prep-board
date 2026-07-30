@@ -5,35 +5,44 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { updateBudgetGoalAction, updateBudgetSpentAction } from "@/lib/actions/budget-actions"
+import { updateBudgetGoalAction, updateOtherExpensesAction } from "@/lib/actions/budget-actions"
 
 export function BudgetGoalForm({
   initialGoal,
-  initialSpent,
+  initialOtherExpenses,
 }: {
   initialGoal: number
-  initialSpent: number
+  initialOtherExpenses: number
 }) {
   const [goalInput, setGoalInput] = useState(String(initialGoal))
-  const [spentInput, setSpentInput] = useState(String(initialSpent))
+  const [otherExpensesInput, setOtherExpensesInput] = useState(String(initialOtherExpenses))
+  const [goalError, setGoalError] = useState<string | null>(null)
+  const [otherExpensesError, setOtherExpensesError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+
     const parsedGoal = Number(goalInput)
-    const parsedSpent = Number(spentInput)
-    if (!Number.isFinite(parsedGoal) || parsedGoal < 0) return
-    if (!Number.isFinite(parsedSpent) || parsedSpent < 0) return
+    const goalInvalid = !Number.isFinite(parsedGoal) || parsedGoal <= 0
+    setGoalError(goalInvalid ? "Ціль має бути більшою за 0" : null)
+
+    const trimmedOtherExpenses = otherExpensesInput.trim()
+    const parsedOtherExpenses = trimmedOtherExpenses === "" ? 0 : Number(trimmedOtherExpenses)
+    const otherExpensesInvalid = !Number.isFinite(parsedOtherExpenses) || parsedOtherExpenses < 0
+    setOtherExpensesError(otherExpensesInvalid ? "Не може бути від'ємним" : null)
+
+    if (goalInvalid || otherExpensesInvalid) return
 
     startTransition(async () => {
       try {
         await Promise.all([
           updateBudgetGoalAction(parsedGoal),
-          updateBudgetSpentAction(parsedSpent),
+          updateOtherExpensesAction(parsedOtherExpenses),
         ])
       } catch {
         setGoalInput(String(initialGoal))
-        setSpentInput(String(initialSpent))
+        setOtherExpensesInput(String(initialOtherExpenses))
         toast.error("Не вдалось оновити бюджет. Спробуйте ще раз.")
       }
     })
@@ -46,26 +55,26 @@ export function BudgetGoalForm({
         <Input
           id="goal"
           type="number"
-          min="0"
           step="0.01"
           inputMode="decimal"
           value={goalInput}
           onChange={(event) => setGoalInput(event.target.value)}
           disabled={isPending}
         />
+        {goalError && <span className="text-xs text-destructive">{goalError}</span>}
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="spent">Витрачено, грн</Label>
+        <Label htmlFor="other-expenses">Інші витрати, грн</Label>
         <Input
-          id="spent"
+          id="other-expenses"
           type="number"
-          min="0"
           step="0.01"
           inputMode="decimal"
-          value={spentInput}
-          onChange={(event) => setSpentInput(event.target.value)}
+          value={otherExpensesInput}
+          onChange={(event) => setOtherExpensesInput(event.target.value)}
           disabled={isPending}
         />
+        {otherExpensesError && <span className="text-xs text-destructive">{otherExpensesError}</span>}
       </div>
       <Button type="submit" disabled={isPending}>Зберегти</Button>
     </form>
