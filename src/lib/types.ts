@@ -63,3 +63,14 @@ export interface Item {
   sort_order: number
   created_at: string
 }
+
+export interface Contact {
+  id: string
+  household_id: string
+  name: string
+  role: string | null
+  phone: string | null
+  note: string | null
+  sort_order: number
+  created_at: string
+}

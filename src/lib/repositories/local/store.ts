@@ -1,7 +1,7 @@
 import "server-only"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
-import type { Household, Pregnancy, BudgetGoal, Item } from "@/lib/types"
+import type { Household, Pregnancy, BudgetGoal, Item, Contact } from "@/lib/types"
 import { seedItems } from "@/lib/content/seed-items"
 
 export interface StoreShape {
@@ -9,6 +9,7 @@ export interface StoreShape {
   pregnancies: Record<string, Pregnancy>
   budgetGoals: Record<string, BudgetGoal>
   items: Record<string, Item>
+  contacts: Record<string, Contact>
 }
 
 function getStoreDir(): string {
@@ -67,13 +68,16 @@ function createDefaultHouseholdState(): StoreShape {
     pregnancies: { [pregnancy.id]: pregnancy },
     budgetGoals: { [budgetGoal.id]: budgetGoal },
     items,
+    contacts: {},
   }
 }
 
 async function readStoreFile(): Promise<StoreShape> {
   try {
     const raw = await readFile(getStorePath(), "utf-8")
-    return JSON.parse(raw) as StoreShape
+    const store = JSON.parse(raw) as StoreShape
+    store.contacts ??= {}
+    return store
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       const initial = createDefaultHouseholdState()
