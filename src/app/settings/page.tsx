@@ -2,7 +2,7 @@ import Link from "next/link"
 
 import { householdRepository, pregnancyRepository } from "@/lib/repositories"
 import { DueDateForm } from "@/components/settings/due-date-form"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 
 export const dynamic = "force-dynamic"
 
@@ -18,9 +18,9 @@ export default async function Page() {
       ) : (
         <p className="text-sm text-muted-foreground">Дані про вагітність не знайдено.</p>
       )}
-      <Button variant="outline" render={<Link href="/settings/weeks" />} className="self-start">
+      <Link href="/settings/weeks" className={buttonVariants({ variant: "outline", className: "self-start" })}>
         Тижні пунктів
-      </Button>
+      </Link>
     </div>
   )
 }

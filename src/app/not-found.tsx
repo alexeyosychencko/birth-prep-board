@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 
 export default function NotFound() {
   return (
@@ -8,9 +8,9 @@ export default function NotFound() {
       <p className="text-sm text-muted-foreground">
         Такого розділу не існує або він був переміщений.
       </p>
-      <Button render={<Link href="/" />} className="self-start">
+      <Link href="/" className={buttonVariants({ className: "self-start" })}>
         На дашборд
-      </Button>
+      </Link>
     </div>
   )
 }
