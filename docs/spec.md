@@ -11,17 +11,28 @@
 
 - Auth через Supabase (email/пароль).
 - Household на двох людей, приєднання партнера через invite-код.
-- Dashboard: timeline тижнів вагітності 20–40 (обмежено діапазоном, без
-  edge-case обробки виходу за межі), прогрес = поточний тиждень з
-  20–40 **і окремо** "виконано X з Y пунктів" по всіх чеклістах, блок
-  "фокус тижня" з `week_content`.
+- Dashboard:
+  - timeline: реальний тиждень вагітності 0–42 (без клемпу до 20),
+    прогрес = `week / 40`. Діапазон 20–40 стосується лише наявності
+    `week_content`, не самого тижня чи прогресу.
+  - блок "фокус тижня": при `week < 20` — заглушка "контент
+    починається з 20-го тижня" (контент 20-го тижня не показується);
+    при `week > 40` — мітка "40+", контент 40-го тижня і окрема
+    помітка, що термін минув.
+  - блок **"Пора зробити"** (головний блок сторінки): невідмічені
+    items з `target_week <= поточний тиждень`, від найстаріших.
+  - блок "Наступного тижня": невідмічені items з
+    `target_week = поточний тиждень + 1`.
+  - прогрес по чеклістах: "виконано X з Y пунктів" по всіх items.
+  - стан бюджету: `spent_amount` відносно `goal_amount`.
 - 7 чекліст-розділів, кожен окремий route: `/documents`,
   `/hospital-bag` (з підрозділами мама/малюк/тато), `/baby-items`,
   `/home`, `/medical`, `/people-logistics`, `/postpartum`.
 - Кожен пункт чекліста: назва, опціональна ціна, checkbox, ознака
   seed/custom; можна додавати власні пункти.
-- `/budget`: одна "банка" — ціль (редагована), план (сума всіх цін),
-  факт (сума цін позначених пунктів). Модель — розділ 3.
+- `/budget`: одна "банка" — ціль (редагована), витрачено (редаговане
+  вручну), план (сума всіх цін) і довідково — сума цін позначених
+  пунктів. Модель — розділ 3.
 - `/settings`: редагування ПДР (перераховує timeline на льоту) +
   постійний показ invite-коду household.
 - Спільний layout з навігацією між усіма розділами.
@@ -73,6 +84,10 @@ budget_goals
   household_id   uuid NOT NULL UNIQUE → households
   goal_amount    numeric(10,2) NOT NULL DEFAULT 0 CHECK (goal_amount >= 0)
                  -- numeric, не float: точне округлення в бюджеті
+  spent_amount   numeric(10,2) NOT NULL DEFAULT 0 CHECK (spent_amount >= 0)
+                 -- єдина правда про витрати, вводиться вручну —
+                 -- галочка на пункті не означає, що заплачено саме
+                 -- вказану ціну (розділ 3)
 
 sections        -- public read-only довідник
   id           uuid PK default gen_random_uuid()
@@ -86,9 +101,15 @@ seed_items      -- public read-only шаблон, окремо від items
   subsection      text CHECK (subsection IN ('mom', 'baby', 'dad'))
   title           text NOT NULL
   default_price   numeric(10,2)
+  target_week     int CHECK (target_week BETWEEN 1 AND 42)
+                  -- тиждень, до якого пункт варто зробити; копіюється
+                  -- в items при онбордингу (розділ 4)
   sort_order      int NOT NULL
 
 week_content    -- public read-only, 21 рядок (тижні 20..40)
+                -- діапазон 20..40 — це наявність контенту, не діапазон
+                -- самого тижня вагітності (getCurrentWeek — 0..42,
+                -- розділ 1)
   week_number   int PK CHECK (week_number BETWEEN 20 AND 40)
   title         text NOT NULL
   tip           text NOT NULL
@@ -108,6 +129,11 @@ items           -- household_id NOT NULL (без "шаблонних" NULL-ря�
                  -- OR (subsection IS NULL AND key = 'hospital-bag').
   title          text NOT NULL
   price          numeric(10,2)
+  target_week    int CHECK (target_week BETWEEN 1 AND 42)
+                 -- тиждень, до якого пункт варто зробити. NULL — без
+                 -- строку, пункт ніколи не потрапляє в блок "Пора
+                 -- зробити" (розділ 1). Кастомні пункти: NULL за
+                 -- замовчуванням, користувач може задати
   is_checked     boolean NOT NULL DEFAULT false
   is_seed        boolean NOT NULL DEFAULT false
   sort_order     int NOT NULL
@@ -142,13 +168,21 @@ items(household_id, section_id)
 
 ## 3. Модель бюджету
 
-- `ціль` (goal) — редагована сума, задається при онбордингу, змінна
-  пізніше з `/budget`.
+- `ціль` (`goal_amount`) — редагована сума, задається при онбордингу,
+  змінна пізніше з `/budget`.
+- `витрачено` (`spent_amount`) — редагована сума, введена вручну.
+  Єдина правда про витрати.
 - `заплановано` (plan) = `SUM(price)` по всіх `items` household з
-  вказаною ціною, незалежно від `is_checked`.
-- `витрачено` (fact) = `SUM(price)` по `items`, де `is_checked = true`.
-- UI показує прогрес банки як `факт` відносно `цілі`, `заплановано` —
-  довідково поруч.
+  вказаною ціною, незалежно від `is_checked` — довідково.
+- окремий довідковий рядок: `SUM(price)` по `items`, де
+  `is_checked = true`, підписаний "за чеклістом позначено на X грн" —
+  підказка, не показник витрат.
+- UI показує прогрес банки як `spent_amount` відносно `goal_amount`;
+  `plan` і "за чеклістом позначено" — довідково поруч.
+
+Причина: галочка на пункті означає лише "зроблено", а не "заплачено
+саме вказану ціну" — виводити витрати з чекбоксів було б вдаваною
+точністю.
 
 ## 4. Онбординг
 
@@ -210,8 +244,8 @@ begin
   insert into budget_goals (household_id, goal_amount)
   values (v_household_id, p_goal_amount);
 
-  insert into items (household_id, section_id, subsection, title, price, is_checked, is_seed, sort_order)
-  select v_household_id, section_id, subsection, title, default_price, false, true, sort_order
+  insert into items (household_id, section_id, subsection, title, price, target_week, is_checked, is_seed, sort_order)
+  select v_household_id, section_id, subsection, title, default_price, target_week, false, true, sort_order
   from seed_items;
 
   return v_household_id;
@@ -438,6 +472,12 @@ $$ language plpgsql;
 5. **Фаза 1 не відтворює sync між двома користувачами.** Сценарії
    "партнер ще не приєднався", ротація invite-коду і конфлікт
    одночасних правок проєктуються на фазі 2.
+6. **Тиждень показується реальний.** Клемп до 20 прибрано як такий,
+   що дає невірну інформацію; діапазон 20–40 лишився лише умовою
+   наявності `week_content` (розділ 1).
+7. **Витрати вводяться вручну (`spent_amount`), не виводяться з
+   відмічених пунктів.** Чекбокс на пункті — це стан "зроблено", а не
+   підтвердження оплати саме вказаної ціни (розділ 3).
 
 ## 9. Error handling
 
@@ -452,8 +492,10 @@ $$ language plpgsql;
 ## 10. Тестування
 
 - Vitest unit-тести лише для чистої логіки з найвищим ризиком помилки:
-  `getCurrentWeek(dueDate)` (клемп 20–40), розрахунок `plan`/`fact`
-  бюджету.
+  `getCurrentWeek(dueDate)` (діапазон 0–42, без клемпу), розрахунок
+  `plan` і довідкового "за чеклістом позначено на X грн" бюджету.
+  `spent_amount` — ручне поле, не обчислюється, тестової логіки не
+  потребує.
 - Без e2e/інтеграційних тестів у MVP.
 - Ручний чек-лист перед здачею: онбординг create + join у двох сесіях
   браузера, CRUD чеклістів, перерахунок бюджету, зміна ПДР у
