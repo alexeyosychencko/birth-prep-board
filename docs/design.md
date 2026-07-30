@@ -129,3 +129,12 @@ client"` (як робить `SectionChecklist` для одного розділ�
 Приклад: `src/components/dashboard/item-toggle.tsx` викликає той
 самий `toggleItemAction`, що й `SectionChecklist`, залишаючи батьківський
 список (`due-checklist.tsx`) серверним.
+
+**Картка розділу з прогресом** (дашборд): `Card size="sm"` обгорнута в
+`Link` на маршрут розділу (`className="block"` на `Link`, бо `Card` —
+`div`, а `a` за замовчуванням inline), іконка — та сама, що в сайдбарі,
+береться з `navItems` (`src/lib/nav-items.ts`) за збігом `href`, а не
+дублюється окремим імпортом. Усередині — `CardTitle` (іконка + назва) і
+`CardContent` з `Progress` (без лейбла/значення поруч — компактний
+рахунок "X з Y" окремим рядком під треком, `text-xs`). Приклад:
+`src/components/dashboard/section-grid.tsx`.

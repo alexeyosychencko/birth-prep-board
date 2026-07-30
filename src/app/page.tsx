@@ -18,6 +18,7 @@ import { ProgressValueText } from "@/components/progress-value-text"
 import { WeekTimeline } from "@/components/dashboard/week-timeline"
 import { DueChecklist } from "@/components/dashboard/due-checklist"
 import { UpcomingList } from "@/components/dashboard/upcoming-list"
+import { SectionGrid } from "@/components/dashboard/section-grid"
 
 const sectionTitleById = Object.fromEntries(
   SECTIONS_LIST.map((section) => [section.id, section.title_uk])
@@ -62,6 +63,15 @@ export default async function Page() {
   const sortedDueItems = dueItems
     .slice()
     .sort((a, b) => (a.target_week ?? 0) - (b.target_week ?? 0))
+
+  const sectionProgress = SECTIONS_LIST.map((section) => {
+    const sectionItems = items.filter((item) => item.section_id === section.id)
+    return {
+      section,
+      done: sectionItems.filter((item) => item.is_checked).length,
+      total: sectionItems.length,
+    }
+  })
 
   return (
     <div className="flex flex-col gap-6">
@@ -136,6 +146,8 @@ export default async function Page() {
           </Card>
         </div>
       </div>
+
+      <SectionGrid sections={sectionProgress} />
     </div>
   )
 }
