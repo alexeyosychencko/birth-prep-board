@@ -83,3 +83,12 @@ export async function updateItemTargetWeekAction(
   revalidatePath("/")
   revalidatePath("/budget")
 }
+
+export async function reorderItemsAction(path: string, sectionId: string, orderedIds: string[]): Promise<void> {
+  if (!SECTIONS_LIST.some((section) => section.id === sectionId)) throw new Error("Invalid section id")
+  if (!orderedIds.every((id) => UUID_RE.test(id))) throw new Error("Invalid item id")
+
+  const household = await householdRepository.getOrCreateDefaultHousehold()
+  await itemsRepository.reorderItems(household.id, sectionId, orderedIds)
+  revalidatePath(path)
+}

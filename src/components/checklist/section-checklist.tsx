@@ -20,6 +20,7 @@ import { AddItemDialog } from "@/components/checklist/add-item-dialog"
 import { TargetWeekField } from "@/components/checklist/target-week-field"
 import { PriceField } from "@/components/checklist/price-field"
 import { NoteIndicator, NoteView, NoteEditor } from "@/components/checklist/note-field"
+import { DragHandle, SortableListProvider, useSortableRow } from "@/components/sortable-list"
 import type { Item, ItemStatus, Subsection } from "@/lib/types"
 import {
   setItemStatusAction,
@@ -27,6 +28,7 @@ import {
   updateItemPriceAction,
   updateItemTargetWeekAction,
   updateItemNoteAction,
+  reorderItemsAction,
 } from "@/lib/actions/checklist-actions"
 
 type OptimisticAction =
@@ -36,6 +38,7 @@ type OptimisticAction =
   | { type: "updatePrice"; itemId: string; price: number | null }
   | { type: "updateTargetWeek"; itemId: string; targetWeek: number | null }
   | { type: "updateNote"; itemId: string; note: string | null }
+  | { type: "reorder"; orderedIds: string[] }
 
 function reduceOptimistic(state: Item[], action: OptimisticAction): Item[] {
   switch (action.type) {
@@ -59,6 +62,13 @@ function reduceOptimistic(state: Item[], action: OptimisticAction): Item[] {
       return state.map((item) =>
         item.id === action.itemId ? { ...item, note: action.note } : item
       )
+    case "reorder": {
+      const sortOrderById = new Map(action.orderedIds.map((id, index) => [id, index + 1]))
+      return state.map((item) => {
+        const nextSortOrder = sortOrderById.get(item.id)
+        return nextSortOrder === undefined ? item : { ...item, sort_order: nextSortOrder }
+      })
+    }
   }
 }
 
@@ -84,13 +94,25 @@ function ChecklistRow({
   const [weekEditing, setWeekEditing] = useState(false)
   const [noteExpanded, setNoteExpanded] = useState(false)
   const [noteEditing, setNoteEditing] = useState(false)
+  const sortable = useSortableRow(item.id)
 
   const hasNote = item.note !== null
   const showNoteBelow = noteEditing || (hasNote && noteExpanded)
 
+  /* eslint-disable react-hooks/refs -- dnd-kit's useSortable returns setNodeRef/
+     attributes/listeners bundled with other data; this rule treats the whole
+     object as ref-like and flags every property access, a false positive for
+     this documented API. */
   return (
-    <li className="flex flex-col gap-1 py-1.5">
+    <li
+      ref={sortable.setNodeRef}
+      style={sortable.style}
+      data-dragging={sortable.isDragging || undefined}
+      className="flex flex-col gap-1 py-1.5 data-dragging:relative data-dragging:z-10 data-dragging:bg-background"
+    >
       <div className="flex items-center gap-3">
+        <DragHandle attributes={sortable.attributes} listeners={sortable.listeners} />
+        {/* eslint-enable react-hooks/refs */}
         <Checkbox
           checked={item.status === "done"}
           onCheckedChange={() => onSetStatus(item.status === "done" ? "todo" : "done")}
@@ -167,6 +189,7 @@ function ChecklistList({
   onUpdatePrice,
   onUpdateTargetWeek,
   onUpdateNote,
+  onReorder,
 }: {
   items: Item[]
   isPending: boolean
@@ -176,26 +199,29 @@ function ChecklistList({
   onUpdatePrice: (item: Item, price: number | null) => void
   onUpdateTargetWeek: (item: Item, targetWeek: number | null) => void
   onUpdateNote: (item: Item, note: string | null) => void
+  onReorder: (orderedIds: string[]) => void
 }) {
   if (items.length === 0) {
     return <p className="text-sm text-muted-foreground">Поки немає пунктів. Додайте перший.</p>
   }
   return (
-    <ul className="flex flex-col gap-1">
-      {items.map((item) => (
-        <ChecklistRow
-          key={item.id}
-          item={item}
-          isPending={isPending}
-          currentWeek={currentWeek}
-          onSetStatus={(status) => onSetStatus(item, status)}
-          onDelete={() => onDelete(item)}
-          onUpdatePrice={(price) => onUpdatePrice(item, price)}
-          onUpdateTargetWeek={(targetWeek) => onUpdateTargetWeek(item, targetWeek)}
-          onUpdateNote={(note) => onUpdateNote(item, note)}
-        />
-      ))}
-    </ul>
+    <SortableListProvider items={items} onReorder={onReorder}>
+      <ul className="flex flex-col gap-1">
+        {items.map((item) => (
+          <ChecklistRow
+            key={item.id}
+            item={item}
+            isPending={isPending}
+            currentWeek={currentWeek}
+            onSetStatus={(status) => onSetStatus(item, status)}
+            onDelete={() => onDelete(item)}
+            onUpdatePrice={(price) => onUpdatePrice(item, price)}
+            onUpdateTargetWeek={(targetWeek) => onUpdateTargetWeek(item, targetWeek)}
+            onUpdateNote={(note) => onUpdateNote(item, note)}
+          />
+        ))}
+      </ul>
+    </SortableListProvider>
   )
 }
 
@@ -271,6 +297,24 @@ export function SectionChecklist({
 
   const sorted = optimisticItems.slice().sort((a, b) => a.sort_order - b.sort_order)
 
+  // Drag happens within one subsection group at a time, but sort_order is
+  // scoped to the whole section (spec, "Ідентифікатори"/items.sort_order) —
+  // so the reordered subset is spliced back into the full section order
+  // (other groups keep their relative positions) before persisting.
+  function handleReorder(orderedSubsetIds: string[]) {
+    const subset = new Set(orderedSubsetIds)
+    let cursor = 0
+    const fullOrder = sorted.map((item) => (subset.has(item.id) ? orderedSubsetIds[cursor++] : item.id))
+    applyOptimistic({ type: "reorder", orderedIds: fullOrder })
+    startTransition(async () => {
+      try {
+        await reorderItemsAction(path, sectionId, fullOrder)
+      } catch {
+        toast.error("Не вдалось зберегти порядок. Спробуйте ще раз.")
+      }
+    })
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {subsections ? (
@@ -286,6 +330,7 @@ export function SectionChecklist({
               onUpdatePrice={handleUpdatePrice}
               onUpdateTargetWeek={handleUpdateTargetWeek}
               onUpdateNote={handleUpdateNote}
+              onReorder={handleReorder}
             />
           </div>
         ))
@@ -299,6 +344,7 @@ export function SectionChecklist({
           onUpdatePrice={handleUpdatePrice}
           onUpdateTargetWeek={handleUpdateTargetWeek}
           onUpdateNote={handleUpdateNote}
+          onReorder={handleReorder}
         />
       )}
 

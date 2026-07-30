@@ -262,3 +262,37 @@ text-muted-foreground`, навіщо розділ і що в нього клас
 станом рядка (`deleteOpen`), а не піднятим у список, за тим самим
 принципом, що й `weekEditing`/`noteEditing` у `ChecklistRow`: стан
 одного рядка не має впливати на сусідні.
+
+**Drag handle в рядку** (`ChecklistRow`, `ContactRow`): окрема
+іконка `GripVerticalIcon` (`@hugeicons/core-free-icons`) ліворуч від
+чекбокса/імені, а не перетягування всього рядка — на мобільному
+жест по всьому рядку конфліктував би зі скролом сторінки. Технічно
+це забезпечує `touch-action: none` (клас `touch-none`), який
+навмисно застосований **тільки** на кнопці-хендлі, а не на `<li>` чи
+`<ul>`: решта рядка (назва, ціна, меню дій) лишається зі звичайним
+`touch-action: auto`, тож свайп по тексту пункту чи порожньому місцю
+рядка й далі скролить сторінку, і тільки утримання саме іконки
+хендла починає drag.
+
+**Сортований список** (`src/components/sortable-list.tsx`,
+спільний для чеклістів і контактів): `SortableListProvider` — тонка
+обгортка над `DndContext`/`SortableContext` з `@dnd-kit/core` +
+`@dnd-kit/sortable` (гілка 6.x/10.x, не переписана `@dnd-kit/react`/
+`@dnd-kit/dom`, розділ «Ще не підключено»), яка володіє лише
+сенсорами (`PointerSensor` з `activationConstraint: {distance: 8}`,
+`TouchSensor` з `{delay: 200, tolerance: 8}` — щоб короткий тап не
+запускав drag, `KeyboardSensor` з `sortableKeyboardCoordinates` —
+клавіатурне перевпорядкування майже безкоштовне в dnd-kit, не
+вимикається) і обчисленням нового порядку на `onDragEnd`
+(`arrayMove` + `closestCenter`). Компонент-хук `useSortableRow(id)`
+викликається **напряму** в компоненті рядка (`ChecklistRow`,
+`ContactRow`), а не проксіюється пропом з іншого компонента: ESLint
+React Compiler-правило `react-hooks/refs` вважає `setNodeRef`
+(колбек-реф, який `useSortable` повертає поруч з іншими полями)
+рефом і забороняє доступ до **будь-якого** поля того самого
+об'єкта під час рендеру, щойно об'єкт передається через пропи —
+відомий хибний спрацьовує для API на кшталт dnd-kit; тому виклик
+рядок звертається до хука сам, і навколо використання `sortable.*`
+стоїть точковий `eslint-disable react-hooks/refs` з поясненням.
+Список — звичайний `<ul>`, реалізації рендерять власні `<li>` як і
+раніше; `SortableListProvider` тільки огортає їх.

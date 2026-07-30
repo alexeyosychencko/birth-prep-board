@@ -20,5 +20,7 @@ export interface ItemsRepository {
   updateItemNote(householdId: string, itemId: string, note: string | null): Promise<void>
   updateItemPrice(householdId: string, itemId: string, price: number | null): Promise<void>
   updateItemTargetWeek(householdId: string, itemId: string, targetWeek: number | null): Promise<void>
+  /** Rewrites sort_order sequentially (1..N) for every item of the section, in the given order. */
+  reorderItems(householdId: string, sectionId: string, orderedIds: string[]): Promise<void>
   deleteItem(householdId: string, itemId: string): Promise<void>
 }

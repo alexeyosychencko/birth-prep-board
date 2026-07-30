@@ -100,6 +100,19 @@ export const itemsRepository: ItemsRepository = {
     })
   },
 
+  async reorderItems(householdId, sectionId, orderedIds) {
+    await writeStore((store) => {
+      const sectionItems = Object.values(store.items).filter(
+        (item) => item.household_id === householdId && item.section_id === sectionId
+      )
+      const bySortOrder = new Map(orderedIds.map((id, index) => [id, index + 1]))
+      for (const item of sectionItems) {
+        const nextSortOrder = bySortOrder.get(item.id)
+        if (nextSortOrder !== undefined) item.sort_order = nextSortOrder
+      }
+    })
+  },
+
   async deleteItem(householdId, itemId) {
     await writeStore((store) => {
       assertOwnedItem(store.items, householdId, itemId)
