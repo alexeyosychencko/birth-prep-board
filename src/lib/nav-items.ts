@@ -9,23 +9,26 @@ import {
   HeartPulseIcon,
   Settings01Icon,
   TimelineListIcon,
+  ContactBookIcon,
 } from "@hugeicons/core-free-icons"
 
 export type NavItem = {
   title: string
   href: string
   icon: typeof File01Icon
+  group: "checklists" | "other"
 }
 
 export const navItems: NavItem[] = [
-  { title: "Дашборд", href: "/", icon: TimelineListIcon },
-  { title: "Документи", href: "/documents", icon: File01Icon },
-  { title: "Сумка в пологовий", href: "/hospital-bag", icon: TravelBagIcon },
-  { title: "Речі для малюка", href: "/baby-items", icon: BabyBottleIcon },
-  { title: "Дім", href: "/home", icon: House01Icon },
-  { title: "Медичне", href: "/medical", icon: BriefcaseMedicalIcon },
-  { title: "Люди й логістика", href: "/people-logistics", icon: UserGroupIcon },
-  { title: "Післяпологовий період", href: "/postpartum", icon: HeartPulseIcon },
-  { title: "Бюджет", href: "/budget", icon: Wallet01Icon },
-  { title: "Налаштування", href: "/settings", icon: Settings01Icon },
+  { title: "Дашборд", href: "/", icon: TimelineListIcon, group: "checklists" },
+  { title: "Документи", href: "/documents", icon: File01Icon, group: "checklists" },
+  { title: "Сумка в пологовий", href: "/hospital-bag", icon: TravelBagIcon, group: "checklists" },
+  { title: "Речі для малюка", href: "/baby-items", icon: BabyBottleIcon, group: "checklists" },
+  { title: "Дім", href: "/home", icon: House01Icon, group: "checklists" },
+  { title: "Медичне", href: "/medical", icon: BriefcaseMedicalIcon, group: "checklists" },
+  { title: "Люди й логістика", href: "/people-logistics", icon: UserGroupIcon, group: "checklists" },
+  { title: "Післяпологовий період", href: "/postpartum", icon: HeartPulseIcon, group: "checklists" },
+  { title: "Контакти", href: "/contacts", icon: ContactBookIcon, group: "other" },
+  { title: "Бюджет", href: "/budget", icon: Wallet01Icon, group: "other" },
+  { title: "Налаштування", href: "/settings", icon: Settings01Icon, group: "other" },
 ]
