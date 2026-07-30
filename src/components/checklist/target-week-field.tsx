@@ -6,12 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { Item } from "@/lib/types"
-import { isTargetWeekOverdue } from "@/lib/pregnancy"
-
-export function formatWeekBadgeLabel(targetWeek: number, currentWeek: number | null): string {
-  const base = `до ${targetWeek} тижня`
-  return isTargetWeekOverdue(targetWeek, currentWeek) ? `${base} · прострочено` : base
-}
+import { formatWeekBadgeLabel } from "@/lib/pregnancy"
 
 export function TargetWeekField({
   item,

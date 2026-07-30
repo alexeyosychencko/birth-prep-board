@@ -60,6 +60,10 @@ If a task looks like it can't be solved without a backend, say so
   .claude/rules/data-layer.md
 - Never expose SUPABASE_SERVICE_ROLE_KEY to client code
 - Spec lives in docs/spec.md — read it before implementing features
+- Pure functions (formatting, calculations, constants) live in src/lib/,
+  without "use client" and without 'server-only'. A client module holds
+  components and hooks, not utilities — otherwise the server can't call
+  them, and the breakage only surfaces the first time that branch runs.
 
 ## Subagents
 

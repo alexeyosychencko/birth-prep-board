@@ -19,11 +19,19 @@
     починається з 20-го тижня" (контент 20-го тижня не показується);
     при `week > 40` — мітка "40+", контент 40-го тижня і окрема
     помітка, що термін минув.
-  - блок **"Пора зробити"** (головний блок сторінки): невідмічені
-    items з `target_week <= поточний тиждень`, від найстаріших.
-  - блок "Наступного тижня": невідмічені items з
-    `target_week = поточний тиждень + 1`.
-  - прогрес по чеклістах: "виконано X з Y пунктів" по всіх items.
+  - блок **"Пора зробити"** (головний блок сторінки): items зі
+    статусом `todo` або `in_progress` і `target_week <= поточний
+    тиждень`, від найстаріших (сортування за `target_week`
+    зростанням). `in_progress` не приховується — узятий у роботу
+    пункт не має зникати з дашборда, це головна причина забути про
+    нього. Без розділення на блоки "прострочене"/"цього тижня" —
+    замість цього дрібна помітка "прострочено" на бейджі тижня для
+    пунктів, де `target_week < поточний тиждень`, без destructive і
+    без тривожних акцентів.
+  - блок "Наступного тижня": items зі статусом `todo` або
+    `in_progress` з `target_week = поточний тиждень + 1`.
+  - прогрес по чеклістах: "виконано X з Y пунктів" — X рахує лише
+    `status = 'done'`, Y — усі items.
   - стан бюджету: похідне `витрачено` відносно `goal_amount`.
 - 7 чекліст-розділів, кожен окремий route: `/documents`,
   `/hospital-bag` (з підрозділами мама/малюк/тато), `/baby-items`,
@@ -35,6 +43,8 @@
   Модель — розділ 3.
 - `/settings`: редагування ПДР (перераховує timeline на льоту) +
   постійний показ invite-коду household.
+- `/contacts`: список контактів (лікар, пологовий, таксі тощо), CRUD;
+  на мобільному номер телефону — посилання `tel:`.
 - Спільний layout з навігацією між усіма розділами.
 
 **Явно поза MVP:** завантаження файлів/фото, нагадування/пуш,
@@ -134,11 +144,35 @@ items           -- household_id NOT NULL (без "шаблонних" NULL-ря�
                  -- строку, пункт ніколи не потрапляє в блок "Пора
                  -- зробити" (розділ 1). Кастомні пункти: NULL за
                  -- замовчуванням, користувач може задати
-  is_checked     boolean NOT NULL DEFAULT false
+  status         text NOT NULL DEFAULT 'todo'
+                 CHECK (status IN ('todo', 'in_progress', 'done'))
+                 -- todo — не почато; in_progress — у роботі
+                 -- (замовлено й чекаємо, домовляємось, подано на
+                 -- розгляд); done — завершено. seed_items статусу не
+                 -- мають, item завжди створюється з 'todo'
+  note           text
+                 -- вільний текст, прив'язаний до пункту: чекбокс
+                 -- фіксує факт виконання, але нічого не каже про
+                 -- саму річ — які документи, скільки копій, з ким
+                 -- домовлено. Без цього поля позначка через місяць
+                 -- нічого не означає
   is_seed        boolean NOT NULL DEFAULT false
   sort_order     int NOT NULL
                  -- для custom-пунктів: max(sort_order) + 1 у межах
                  -- (household_id, section_id) на момент створення
+  created_at     timestamptz NOT NULL DEFAULT now()
+
+contacts
+  id             uuid PK default gen_random_uuid()
+  household_id   uuid NOT NULL → households
+  name           text NOT NULL
+  role           text          -- вільний текст, не enum: набір
+                                -- ролей у кожної сім'ї свій (лікар,
+                                -- пологовий, таксі, хто забирає
+                                -- собаку)
+  phone          text          -- без жорсткої валідації формату
+  note           text
+  sort_order     int NOT NULL
   created_at     timestamptz NOT NULL DEFAULT now()
 ```
 
@@ -152,6 +186,7 @@ budget_goals.household_id → households             ON DELETE CASCADE
 items.household_id → households                    ON DELETE CASCADE
 items.section_id → sections                          ON DELETE RESTRICT
 seed_items.section_id → sections                     ON DELETE RESTRICT
+contacts.household_id → households                   ON DELETE CASCADE
 ```
 
 CASCADE тут навмисний і обмежений виключно household-даними:
@@ -164,6 +199,7 @@ household. Додавати CASCADE до нових FK деінде без ок�
 ```
 household_members(user_id)         -- без нього кожна RLS-перевірка seq scan
 items(household_id, section_id)
+contacts(household_id)
 ```
 
 ## 3. Модель бюджету
@@ -171,12 +207,13 @@ items(household_id, section_id)
 - `ціль` (`goal_amount`) — редагована сума, задається при онбордингу,
   змінна пізніше з `/budget`.
 - `витрати з чекліста` (derived) = `SUM(price)` по `items` household,
-  де `is_checked = true` і `price IS NOT NULL`.
+  де `status = 'done'` і `price IS NOT NULL`. `in_progress` у витрати
+  не входить: замовлено ще не означає оплачено.
 - `other_expenses` — редагована сума, витрати поза пунктами
   чеклиста (наприклад, консультації, непередбачені покупки).
 - `витрачено` (derived) = `витрати з чекліста` + `other_expenses`.
 - `заплановано` (plan) = `SUM(price)` по всіх `items` household з
-  вказаною ціною, незалежно від `is_checked` — довідково.
+  вказаною ціною, незалежно від `status` — довідково.
 - UI показує прогрес банки як `витрачено` відносно `goal_amount`, з
   розбивкою на `витрати з чекліста` і `other_expenses` поруч; `plan`
   — довідково.
@@ -247,8 +284,8 @@ begin
   insert into budget_goals (household_id, goal_amount)
   values (v_household_id, p_goal_amount);
 
-  insert into items (household_id, section_id, subsection, title, price, target_week, is_checked, is_seed, sort_order)
-  select v_household_id, section_id, subsection, title, default_price, target_week, false, true, sort_order
+  insert into items (household_id, section_id, subsection, title, price, target_week, status, is_seed, sort_order)
+  select v_household_id, section_id, subsection, title, default_price, target_week, 'todo', true, sort_order
   from seed_items;
 
   return v_household_id;
@@ -353,6 +390,7 @@ UPDATE` тригер — позначено окремо.
 | `pregnancies` | член* | член* (onboarding RPC) | член* | член* | — |
 | `budget_goals` | член* | член* (onboarding RPC) | член* | член* | — |
 | `items` | член* | член* — додавання свого пункту + копіювання seed при онбордингу | член* | член* (post-update `household_id`); незмінність `household_id`/`section_id`/`subsection` на UPDATE — окремий `BEFORE UPDATE` тригер, той самий, що й у розділі 2 для `subsection` (RLS сама по собі не порівнює старе й нове значення) | член* — включно з seed-пунктами (`created_by` немає, розрізняти "чий" пункт нема як; див. «Ухвалені рішення») |
+| `contacts` | член* | член* | член* | член* | член* |
 | `sections`, `seed_items`, `week_content` | `to authenticated using (true)` | — | — | — | — |
 
 \* «член household» = `household_id IN (SELECT household_id FROM household_members WHERE user_id = (select auth.uid()))` (для `households` — `id IN (...)`). Форма `(select auth.uid())` замість голого виклику — Postgres кешує її як initPlan один раз на запит, а не на кожен рядок; на `items` із сотнею рядків різниця відчутна.
@@ -471,7 +509,9 @@ $$ language plpgsql;
    Персоналізація seed-контенту за household — поза MVP.
 4. **Фаза 1 (локальна) — тестова.** Дані одноразові, міграція
    локальних даних у фазу 2 не передбачена. Реальне використання
-   починається після підключення Supabase.
+   починається після підключення Supabase. Зокрема перехід з
+   `is_checked` на `status` не супроводжується міграцією локальних
+   даних: `.data/store.json` видаляється і пересівається.
 5. **Фаза 1 не відтворює sync між двома користувачами.** Сценарії
    "партнер ще не приєднався", ротація invite-коду і конфлікт
    одночасних правок проєктуються на фазі 2.
@@ -479,8 +519,19 @@ $$ language plpgsql;
    що дає невірну інформацію; діапазон 20–40 лишився лише умовою
    наявності `week_content` (розділ 1).
 7. **Витрачено — похідне число.** Редагується тільки "інші витрати"
-   (`other_expenses`, поза чеклістом). Ціни відмічених пунктів
-   входять автоматично (розділ 3).
+   (`other_expenses`, поза чеклістом). Ціни пунктів зі статусом
+   `done` входять автоматично (розділ 3).
+8. **Статус пункту — три значення.** У "витрачено" і "виконано X з
+   Y" входить лише `done`; "Пора зробити" показує `todo` та
+   `in_progress` — узятий у роботу пункт не зникає з поля зору
+   (розділ 1).
+9. **Завантаження файлів/документів відкладено до фази Supabase
+   Storage.** Причина технічна, не пріоритезаційна: локальна
+   файлова реалізація пішла б у смітник цілком (Storage — це
+   бакети, політики доступу і завантаження через підписані URL, а
+   не підміна репозиторію), плюс диск на Vercel ефемерний.
+10. **Прострочені пункти позначаються міткою на бейджі**, без
+    розділення на окремі блоки і без destructive-акцентів (розділ 1).
 
 ## 9. Error handling
 

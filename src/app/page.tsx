@@ -58,8 +58,8 @@ export default async function Page() {
     itemsRepository.getItemsForTargetWeek(household.id, currentWeek + 1),
   ])
   const sortedDueItems = dueItems
-    .slice()
-    .sort((a, b) => (a.target_week ?? 0) - (b.target_week ?? 0))
+    .filter((item): item is typeof item & { target_week: number } => item.target_week !== null)
+    .sort((a, b) => a.target_week - b.target_week)
 
   const sectionProgress = SECTIONS_LIST.map((section) => {
     const sectionItems = items.filter((item) => item.section_id === section.id)

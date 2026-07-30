@@ -1,8 +1,10 @@
 import { Badge } from "@/components/ui/badge"
 import { ItemToggle } from "@/components/dashboard/item-toggle"
 import { AddItemDialog } from "@/components/checklist/add-item-dialog"
-import { formatWeekBadgeLabel } from "@/components/checklist/target-week-field"
+import { formatWeekBadgeLabel } from "@/lib/pregnancy"
 import type { Item } from "@/lib/types"
+
+type DueItem = Item & { target_week: number }
 
 const VISIBLE_COUNT = 8
 
@@ -11,7 +13,7 @@ export function DueChecklist({
   sectionTitleById,
   currentWeek,
 }: {
-  items: Item[]
+  items: DueItem[]
   sectionTitleById: Record<string, string>
   currentWeek: number
 }) {
@@ -64,7 +66,7 @@ function DueRow({
   sectionTitle,
   currentWeek,
 }: {
-  item: Item
+  item: DueItem
   sectionTitle: string
   currentWeek: number
 }) {
@@ -79,7 +81,7 @@ function DueRow({
         )}
       </div>
       <Badge variant="secondary" className="shrink-0">
-        {formatWeekBadgeLabel(item.target_week!, currentWeek)}
+        {formatWeekBadgeLabel(item.target_week, currentWeek)}
       </Badge>
     </li>
   )

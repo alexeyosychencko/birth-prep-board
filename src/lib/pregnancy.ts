@@ -24,3 +24,8 @@ export function getDaysUntilDue(dueDate: Date, today: Date = new Date()): number
 export function isTargetWeekOverdue(targetWeek: number | null, currentWeek: number | null): boolean {
   return targetWeek !== null && currentWeek !== null && targetWeek < currentWeek
 }
+
+export function formatWeekBadgeLabel(targetWeek: number, currentWeek: number | null): string {
+  const base = `до ${targetWeek} тижня`
+  return isTargetWeekOverdue(targetWeek, currentWeek) ? `${base} · прострочено` : base
+}
