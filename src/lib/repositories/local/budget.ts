@@ -19,11 +19,11 @@ export const budgetRepository: BudgetRepository = {
     })
   },
 
-  async updateSpent(householdId, amount) {
+  async updateOtherExpenses(householdId, amount) {
     await writeStore((store) => {
       const goal = Object.values(store.budgetGoals).find((g) => g.household_id === householdId)
       if (!goal) throw new Error(`Budget goal not found for household ${householdId}`)
-      goal.spent_amount = amount
+      goal.other_expenses = amount
     })
   },
 }

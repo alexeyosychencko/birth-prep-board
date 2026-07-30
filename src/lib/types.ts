@@ -27,7 +27,7 @@ export interface BudgetGoal {
   id: string
   household_id: string
   goal_amount: number
-  spent_amount: number
+  other_expenses: number
 }
 
 export interface Section {
