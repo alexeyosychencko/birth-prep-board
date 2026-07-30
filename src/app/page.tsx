@@ -1,6 +1,7 @@
 import { getCurrentWeek, getDaysUntilDue, DUE_DATE_WEEK } from "@/lib/pregnancy"
 import { getWeekContent } from "@/lib/content/week-content"
 import { householdRepository, pregnancyRepository, itemsRepository } from "@/lib/repositories"
+import { SECTIONS_LIST } from "@/lib/sections"
 import {
   Card,
   CardContent,
@@ -8,6 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { WeekTimeline } from "@/components/dashboard/week-timeline"
+import { DueChecklist } from "@/components/dashboard/due-checklist"
+import { UpcomingList } from "@/components/dashboard/upcoming-list"
+
+const sectionTitleById = Object.fromEntries(
+  SECTIONS_LIST.map((section) => [section.id, section.title_uk])
+)
 
 export const dynamic = "force-dynamic"
 
@@ -35,6 +42,14 @@ export default async function Page() {
   const done = items.filter((item) => item.is_checked).length
   const total = items.length
 
+  const [dueItems, upcomingItems] = await Promise.all([
+    itemsRepository.getItemsDueByWeek(household.id, currentWeek),
+    itemsRepository.getItemsForTargetWeek(household.id, currentWeek + 1),
+  ])
+  const sortedDueItems = dueItems
+    .slice()
+    .sort((a, b) => (a.target_week ?? 0) - (b.target_week ?? 0))
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-heading font-semibold">Дашборд</h1>
@@ -55,6 +70,9 @@ export default async function Page() {
         </div>
         <WeekTimeline currentWeek={currentWeek} />
       </div>
+
+      <DueChecklist items={sortedDueItems} sectionTitleById={sectionTitleById} />
+      <UpcomingList items={upcomingItems} sectionTitleById={sectionTitleById} />
 
       <Card>
         <CardHeader>
