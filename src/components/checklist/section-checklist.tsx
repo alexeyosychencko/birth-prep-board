@@ -8,9 +8,9 @@ import { Delete02Icon } from "@hugeicons/core-free-icons"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { AddItemDialog } from "@/components/checklist/add-item-dialog"
 import { TargetWeekField } from "@/components/checklist/target-week-field"
+import { PriceField } from "@/components/checklist/price-field"
 import type { Item, Subsection } from "@/lib/types"
 import {
   toggleItemAction,
@@ -66,26 +66,7 @@ function ChecklistRow({
     <li className="flex items-center gap-3 py-1.5">
       <Checkbox checked={item.is_checked} onCheckedChange={onToggle} disabled={isPending} />
       <span className="flex-1 text-sm">{item.title}</span>
-      <Input
-        type="number"
-        min="0"
-        step="0.01"
-        inputMode="decimal"
-        aria-label="Ціна, грн"
-        defaultValue={item.price ?? ""}
-        disabled={isPending}
-        className="h-8 w-20 text-right text-sm text-muted-foreground"
-        onBlur={(event) => {
-          const raw = event.currentTarget.value.trim()
-          const parsed = raw === "" ? null : Number(raw)
-          if (parsed !== null && Number.isNaN(parsed)) {
-            event.currentTarget.value = item.price === null ? "" : String(item.price)
-            return
-          }
-          if (parsed === item.price) return
-          onUpdatePrice(parsed)
-        }}
-      />
+      <PriceField item={item} isPending={isPending} onUpdate={onUpdatePrice} />
       <TargetWeekField item={item} isPending={isPending} onUpdate={onUpdateTargetWeek} />
       {!item.is_seed && (
         <Button variant="ghost" size="icon-sm" aria-label="Видалити пункт" disabled={isPending} onClick={onDelete}>
