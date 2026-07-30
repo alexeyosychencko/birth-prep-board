@@ -20,3 +20,7 @@ export function getCurrentWeek(dueDate: Date, today: Date = new Date()): number 
 export function getDaysUntilDue(dueDate: Date, today: Date = new Date()): number {
   return Math.round((toUTCDayMs(dueDate) - toUTCDayMs(today)) / MS_PER_DAY)
 }
+
+export function isTargetWeekOverdue(targetWeek: number | null, currentWeek: number | null): boolean {
+  return targetWeek !== null && currentWeek !== null && targetWeek < currentWeek
+}

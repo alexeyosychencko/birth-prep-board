@@ -1,36 +1,47 @@
 "use client"
 
-import { useOptimistic, useTransition } from "react"
+import { useState, useOptimistic, useTransition } from "react"
 import { usePathname } from "next/navigation"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Delete02Icon } from "@hugeicons/core-free-icons"
+import { MoreHorizontalIcon } from "@hugeicons/core-free-icons"
 
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { AddItemDialog } from "@/components/checklist/add-item-dialog"
 import { TargetWeekField } from "@/components/checklist/target-week-field"
 import { PriceField } from "@/components/checklist/price-field"
-import type { Item, Subsection } from "@/lib/types"
+import { NoteIndicator, NoteView, NoteEditor } from "@/components/checklist/note-field"
+import type { Item, ItemStatus, Subsection } from "@/lib/types"
 import {
-  toggleItemAction,
+  setItemStatusAction,
   deleteItemAction,
   updateItemPriceAction,
   updateItemTargetWeekAction,
+  updateItemNoteAction,
 } from "@/lib/actions/checklist-actions"
 
 type OptimisticAction =
-  | { type: "toggle"; itemId: string }
+  | { type: "setStatus"; itemId: string; status: ItemStatus }
   | { type: "add"; item: Item }
   | { type: "delete"; itemId: string }
   | { type: "updatePrice"; itemId: string; price: number | null }
   | { type: "updateTargetWeek"; itemId: string; targetWeek: number | null }
+  | { type: "updateNote"; itemId: string; note: string | null }
 
 function reduceOptimistic(state: Item[], action: OptimisticAction): Item[] {
   switch (action.type) {
-    case "toggle":
+    case "setStatus":
       return state.map((item) =>
-        item.id === action.itemId ? { ...item, is_checked: !item.is_checked } : item
+        item.id === action.itemId ? { ...item, status: action.status } : item
       )
     case "add":
       return [...state, action.item]
@@ -44,35 +55,105 @@ function reduceOptimistic(state: Item[], action: OptimisticAction): Item[] {
       return state.map((item) =>
         item.id === action.itemId ? { ...item, target_week: action.targetWeek } : item
       )
+    case "updateNote":
+      return state.map((item) =>
+        item.id === action.itemId ? { ...item, note: action.note } : item
+      )
   }
 }
 
 function ChecklistRow({
   item,
   isPending,
-  onToggle,
+  currentWeek,
+  onSetStatus,
   onDelete,
   onUpdatePrice,
   onUpdateTargetWeek,
+  onUpdateNote,
 }: {
   item: Item
   isPending: boolean
-  onToggle: () => void
+  currentWeek: number | null
+  onSetStatus: (status: ItemStatus) => void
   onDelete: () => void
   onUpdatePrice: (price: number | null) => void
   onUpdateTargetWeek: (targetWeek: number | null) => void
+  onUpdateNote: (note: string | null) => void
 }) {
+  const [weekEditing, setWeekEditing] = useState(false)
+  const [noteExpanded, setNoteExpanded] = useState(false)
+  const [noteEditing, setNoteEditing] = useState(false)
+
+  const hasNote = item.note !== null
+  const showNoteBelow = noteEditing || (hasNote && noteExpanded)
+
   return (
-    <li className="flex items-center gap-3 py-1.5">
-      <Checkbox checked={item.is_checked} onCheckedChange={onToggle} disabled={isPending} />
-      <span className="flex-1 text-sm">{item.title}</span>
-      <PriceField item={item} isPending={isPending} onUpdate={onUpdatePrice} />
-      <TargetWeekField item={item} isPending={isPending} onUpdate={onUpdateTargetWeek} />
-      {!item.is_seed && (
-        <Button variant="ghost" size="icon-sm" aria-label="Видалити пункт" disabled={isPending} onClick={onDelete}>
-          <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
-        </Button>
-      )}
+    <li className="flex flex-col gap-1 py-1.5">
+      <div className="flex items-center gap-3">
+        <Checkbox
+          checked={item.status === "done"}
+          onCheckedChange={() => onSetStatus(item.status === "done" ? "todo" : "done")}
+          disabled={isPending}
+          aria-label={`Позначити «${item.title}» виконаним`}
+        />
+        <span className="flex-1 truncate text-sm">{item.title}</span>
+        {item.status === "in_progress" && (
+          <Badge className="shrink-0 bg-accent text-accent-foreground">в процесі</Badge>
+        )}
+        <NoteIndicator hasNote={hasNote} expanded={noteExpanded} onToggle={() => setNoteExpanded((v) => !v)} />
+        <PriceField item={item} isPending={isPending} onUpdate={onUpdatePrice} />
+        <TargetWeekField
+          item={item}
+          isPending={isPending}
+          onUpdate={onUpdateTargetWeek}
+          editing={weekEditing}
+          onEditingChange={setWeekEditing}
+          currentWeek={currentWeek}
+        />
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={<Button variant="ghost" size="icon-sm" aria-label="Дії з пунктом" disabled={isPending} />}
+          >
+            <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {item.status !== "done" && (
+              <DropdownMenuItem
+                onClick={() => onSetStatus(item.status === "in_progress" ? "todo" : "in_progress")}
+              >
+                {item.status === "in_progress" ? "Прибрати позначку" : "Позначити в процесі"}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => setNoteEditing(true)}>
+              {hasNote ? "Редагувати нотатку" : "Додати нотатку"}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setWeekEditing(true)}>Змінити тиждень</DropdownMenuItem>
+            {!item.is_seed && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                  Видалити
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {showNoteBelow &&
+        (noteEditing ? (
+          <NoteEditor
+            item={item}
+            isPending={isPending}
+            onUpdate={onUpdateNote}
+            onDone={() => {
+              setNoteEditing(false)
+              setNoteExpanded(true)
+            }}
+          />
+        ) : (
+          <NoteView note={item.note!} />
+        ))}
     </li>
   )
 }
@@ -80,17 +161,21 @@ function ChecklistRow({
 function ChecklistList({
   items,
   isPending,
-  onToggle,
+  currentWeek,
+  onSetStatus,
   onDelete,
   onUpdatePrice,
   onUpdateTargetWeek,
+  onUpdateNote,
 }: {
   items: Item[]
   isPending: boolean
-  onToggle: (item: Item) => void
+  currentWeek: number | null
+  onSetStatus: (item: Item, status: ItemStatus) => void
   onDelete: (item: Item) => void
   onUpdatePrice: (item: Item, price: number | null) => void
   onUpdateTargetWeek: (item: Item, targetWeek: number | null) => void
+  onUpdateNote: (item: Item, note: string | null) => void
 }) {
   if (items.length === 0) {
     return <p className="text-sm text-muted-foreground">Поки немає пунктів. Додайте перший.</p>
@@ -102,10 +187,12 @@ function ChecklistList({
           key={item.id}
           item={item}
           isPending={isPending}
-          onToggle={() => onToggle(item)}
+          currentWeek={currentWeek}
+          onSetStatus={(status) => onSetStatus(item, status)}
           onDelete={() => onDelete(item)}
           onUpdatePrice={(price) => onUpdatePrice(item, price)}
           onUpdateTargetWeek={(targetWeek) => onUpdateTargetWeek(item, targetWeek)}
+          onUpdateNote={(note) => onUpdateNote(item, note)}
         />
       ))}
     </ul>
@@ -116,20 +203,22 @@ export function SectionChecklist({
   sectionId,
   initialItems,
   subsections,
+  currentWeek = null,
 }: {
   sectionId: string
   initialItems: Item[]
   subsections?: { key: Subsection; title: string }[]
+  currentWeek?: number | null
 }) {
   const path = usePathname()
   const [optimisticItems, applyOptimistic] = useOptimistic(initialItems, reduceOptimistic)
   const [isPending, startTransition] = useTransition()
 
-  function handleToggle(item: Item) {
+  function handleSetStatus(item: Item, status: ItemStatus) {
     startTransition(async () => {
-      applyOptimistic({ type: "toggle", itemId: item.id })
+      applyOptimistic({ type: "setStatus", itemId: item.id, status })
       try {
-        await toggleItemAction(path, item.id)
+        await setItemStatusAction(path, item.id, status)
       } catch {
         toast.error("Не вдалось оновити пункт. Спробуйте ще раз.")
       }
@@ -169,6 +258,17 @@ export function SectionChecklist({
     })
   }
 
+  function handleUpdateNote(item: Item, note: string | null) {
+    startTransition(async () => {
+      applyOptimistic({ type: "updateNote", itemId: item.id, note })
+      try {
+        await updateItemNoteAction(path, item.id, note)
+      } catch {
+        toast.error("Не вдалось оновити нотатку. Спробуйте ще раз.")
+      }
+    })
+  }
+
   const sorted = optimisticItems.slice().sort((a, b) => a.sort_order - b.sort_order)
 
   return (
@@ -180,10 +280,12 @@ export function SectionChecklist({
             <ChecklistList
               items={sorted.filter((item) => item.subsection === group.key)}
               isPending={isPending}
-              onToggle={handleToggle}
+              currentWeek={currentWeek}
+              onSetStatus={handleSetStatus}
               onDelete={handleDelete}
               onUpdatePrice={handleUpdatePrice}
               onUpdateTargetWeek={handleUpdateTargetWeek}
+              onUpdateNote={handleUpdateNote}
             />
           </div>
         ))
@@ -191,10 +293,12 @@ export function SectionChecklist({
         <ChecklistList
           items={sorted}
           isPending={isPending}
-          onToggle={handleToggle}
+          currentWeek={currentWeek}
+          onSetStatus={handleSetStatus}
           onDelete={handleDelete}
           onUpdatePrice={handleUpdatePrice}
           onUpdateTargetWeek={handleUpdateTargetWeek}
+          onUpdateNote={handleUpdateNote}
         />
       )}
 

@@ -6,17 +6,28 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { Item } from "@/lib/types"
+import { isTargetWeekOverdue } from "@/lib/pregnancy"
+
+export function formatWeekBadgeLabel(targetWeek: number, currentWeek: number | null): string {
+  const base = `до ${targetWeek} тижня`
+  return isTargetWeekOverdue(targetWeek, currentWeek) ? `${base} · прострочено` : base
+}
 
 export function TargetWeekField({
   item,
   isPending,
   onUpdate,
+  editing,
+  onEditingChange,
+  currentWeek = null,
 }: {
   item: Item
   isPending: boolean
   onUpdate: (targetWeek: number | null) => void
+  editing: boolean
+  onEditingChange: (editing: boolean) => void
+  currentWeek?: number | null
 }) {
-  const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (editing) {
@@ -37,7 +48,7 @@ export function TargetWeekField({
             const raw = event.currentTarget.value.trim()
             if (raw === "") {
               setError(null)
-              setEditing(false)
+              onEditingChange(false)
               onUpdate(null)
               return
             }
@@ -47,7 +58,7 @@ export function TargetWeekField({
               return
             }
             setError(null)
-            setEditing(false)
+            onEditingChange(false)
             if (parsed !== item.target_week) onUpdate(parsed)
           }}
           onKeyDown={(event) => {
@@ -61,8 +72,8 @@ export function TargetWeekField({
 
   if (item.target_week !== null) {
     return (
-      <button type="button" onClick={() => setEditing(true)} disabled={isPending} className="shrink-0">
-        <Badge variant="secondary">{`до ${item.target_week} тижня`}</Badge>
+      <button type="button" onClick={() => onEditingChange(true)} disabled={isPending} className="shrink-0">
+        <Badge variant="secondary">{formatWeekBadgeLabel(item.target_week, currentWeek)}</Badge>
       </button>
     )
   }
@@ -73,7 +84,7 @@ export function TargetWeekField({
       variant="ghost"
       size="sm"
       disabled={isPending}
-      onClick={() => setEditing(true)}
+      onClick={() => onEditingChange(true)}
       className="h-7 shrink-0 px-2 text-xs text-muted-foreground"
     >
       + тиждень
