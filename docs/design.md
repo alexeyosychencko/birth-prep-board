@@ -172,3 +172,50 @@ client"` (як робить `SectionChecklist` для одного розділ�
 `CardContent` з `Progress` (без лейбла/значення поруч — компактний
 рахунок "X з Y" окремим рядком під треком, `text-xs`). Приклад:
 `src/components/dashboard/section-grid.tsx`.
+
+**Меню дій рядка пункту** (`DropdownMenu` через shadcn, іконка-тригер
+`Button variant="ghost" size="icon-sm"` з `MoreHorizontalIcon`, `render`-проп
+замість `asChild` — той самий Base UI патерн, що й у `DialogTrigger`):
+завершує рядок пункту чекліста, після бейджа тижня. Пункти зверху вниз:
+перемикач `todo ⇄ in_progress` (прихований, коли пункт уже `done` —
+чекбокс уже покриває цей перехід), "Додати нотатку"/"Редагувати нотатку"
+(лейбл залежить від наявності `note`), "Змінити тиждень" (програмно
+вмикає той самий режим редагування, що й клік по бейджу тижня — стан
+`editing` піднятий у батьківський рядок, а не локальний для
+`TargetWeekField`, саме щоб пункт меню міг його зʼявити). Деструктивне
+"Видалити" — окремою групою через `DropdownMenuSeparator`, лише коли
+`!item.is_seed`. Приклад: `ChecklistRow` у
+`src/components/checklist/section-checklist.tsx`.
+
+**Бейдж "в процесі"**: `Badge` без семантичного `variant` (жоден із
+наявних — `default`/`secondary`/`destructive` — не пасує), колір
+задається напряму через `className="bg-accent text-accent-foreground"`
+— токен `accent`, вже визначений для обох тем, а не новий. `success`
+навмисно не використовується: він зарезервований за станом "виконано"
+(`.claude/rules` / спец, розділ "Ухвалені рішення"), а `in_progress` —
+проміжний стан, не завершення. Рендериться умовно, лише коли
+`item.status === "in_progress"`, і на дашборді (`DueChecklist`), і на
+сторінках розділів (`ChecklistRow`).
+
+**Нотатка під пунктом** (`src/components/checklist/note-field.tsx`):
+трикомпонентний набір — `NoteIndicator` (кнопка-іконка `Note01Icon`,
+рендериться лише коли `item.note !== null`, `aria-expanded` відбиває
+стан розгортання), `NoteView` (`text-sm text-muted-foreground`,
+`pl-7` — вирівнювання під назвою пункту, з відступом чекбокса й
+`gap-3`), `NoteEditor` (`Textarea`, збереження по `blur`, порожній
+рядок після `trim()` → `null`, не `""`). Рядок пункту — `flex-col`:
+перший рядок — стандартні контроли, другий (умовний) — нотатка.
+Стан розгортання/редагування — локальний у `ChecklistRow`, не
+підіймається вище: сусідні рядки не впливають один на одного.
+
+**Помітка "прострочено"** (`formatWeekBadgeLabel` у
+`target-week-field.tsx`, `isTargetWeekOverdue` у `src/lib/pregnancy.ts`):
+текстовий суфікс `· прострочено` всередині того самого `Badge
+variant="secondary"`, що вже показує дедлайн — без зміни кольору чи
+варіанта (спец, розділ 1: без destructive і тривожних акцентів).
+Умова: `target_week < currentWeek`. Використовується на дашборді
+(`DueChecklist`) і на сторінках розділів (`TargetWeekField`) через
+спільну функцію — інакше однакові пункти виглядали б по-різному в
+двох місцях. Сторінки розділів обчислюють `currentWeek` з
+`pregnancyRepository.getPregnancy` (`null`, якщо вагітності ще немає
+— тоді жоден пункт не позначається прострочним).
