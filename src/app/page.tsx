@@ -19,6 +19,7 @@ import { WeekTimeline } from "@/components/dashboard/week-timeline"
 import { DueChecklist } from "@/components/dashboard/due-checklist"
 import { UpcomingList } from "@/components/dashboard/upcoming-list"
 import { SectionGrid } from "@/components/dashboard/section-grid"
+import { BudgetCard } from "@/components/dashboard/budget-card"
 
 const sectionTitleById = Object.fromEntries(
   SECTIONS_LIST.map((section) => [section.id, section.title_uk])
@@ -51,10 +52,6 @@ export default async function Page() {
   const done = items.filter((item) => item.is_checked).length
   const total = items.length
   const checklistProgress = total > 0 ? (done / total) * 100 : 0
-  const budgetProgress =
-    budgetGoal.goal_amount > 0
-      ? Math.min(100, (budgetGoal.spent_amount / budgetGoal.goal_amount) * 100)
-      : 0
 
   const [dueItems, upcomingItems] = await Promise.all([
     itemsRepository.getItemsDueByWeek(household.id, currentWeek),
@@ -113,17 +110,7 @@ export default async function Page() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Бюджет</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Progress value={budgetProgress}>
-                <ProgressLabel>Витрачено</ProgressLabel>
-                <ProgressValueText value={`${budgetGoal.spent_amount} з ${budgetGoal.goal_amount} грн`} />
-              </Progress>
-            </CardContent>
-          </Card>
+          <BudgetCard goal={budgetGoal} items={items} />
 
           <Card>
             <CardHeader>
