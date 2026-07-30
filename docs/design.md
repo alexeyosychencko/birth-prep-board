@@ -101,3 +101,12 @@
 + `data-active:font-medium` (CLI-generated `sidebarMenuButtonVariants`,
 `sidebar.tsx:482`) — фон `sidebar-accent`, а не `sidebar-primary`, і зміна
 ваги шрифту, а не кольору тексту.
+
+**Сегментний timeline** (дашборд, hero): `flex` ряд з N рівних
+сегментів (`flex-1`, а не `Progress`) — коли потрібно показати шкалу
+дискретних одиниць (тижні), а не одне неперервне значення. Сегменти
+до поточного тижня — `bg-primary/50`, поточний — повний `bg-primary`
+(виділений), майбутні — `bg-muted`. Тонші на мобільному через `h-1.5
+md:h-2`, без media-query на кількість чи ширину — `flex-1` сам звужує
+сегменти під ширину контейнера, скрол не потрібен. Приклад:
+`src/components/dashboard/week-timeline.tsx`.

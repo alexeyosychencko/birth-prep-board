@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { getCurrentWeek } from "./pregnancy"
+import { getCurrentWeek, getDaysUntilDue } from "./pregnancy"
 
 describe("getCurrentWeek", () => {
   it("returns the real week below 20 when the due date is far in the future", () => {
@@ -58,5 +58,24 @@ describe("getCurrentWeek", () => {
     it("is week 40 exactly on the due date", () => {
       expect(getCurrentWeek(dueDate, new Date("2026-09-21"))).toBe(40)
     })
+  })
+})
+
+describe("getDaysUntilDue", () => {
+  it("returns a positive count when the due date is in the future", () => {
+    const dueDate = new Date("2026-09-21")
+    const today = new Date("2026-09-14")
+    expect(getDaysUntilDue(dueDate, today)).toBe(7)
+  })
+
+  it("returns 0 on the due date itself", () => {
+    const dueDate = new Date("2026-09-21")
+    expect(getDaysUntilDue(dueDate, new Date("2026-09-21"))).toBe(0)
+  })
+
+  it("returns a negative count when the due date has passed", () => {
+    const dueDate = new Date("2026-09-21")
+    const today = new Date("2026-09-25")
+    expect(getDaysUntilDue(dueDate, today)).toBe(-4)
   })
 })
