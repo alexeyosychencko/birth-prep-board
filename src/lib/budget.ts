@@ -4,10 +4,10 @@ export function calculateBudgetPlan(items: Item[]): number {
   return items.reduce((sum, item) => sum + (item.price ?? 0), 0)
 }
 
-/** Sum of prices for checked items — the checklist portion of actual spending. */
+/** Sum of prices for done items — the checklist portion of actual spending. */
 export function calculateChecklistSpent(items: Item[]): number {
   return items
-    .filter((item) => item.is_checked)
+    .filter((item) => item.status === "done")
     .reduce((sum, item) => sum + (item.price ?? 0), 0)
 }
 

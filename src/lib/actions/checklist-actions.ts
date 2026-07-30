@@ -3,16 +3,26 @@
 import { revalidatePath } from "next/cache"
 import { itemsRepository, householdRepository } from "@/lib/repositories"
 import { SECTIONS_LIST } from "@/lib/sections"
-import type { Subsection } from "@/lib/types"
+import type { ItemStatus, Subsection } from "@/lib/types"
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const ITEM_STATUSES: ItemStatus[] = ["todo", "in_progress", "done"]
 
-export async function toggleItemAction(path: string, itemId: string): Promise<void> {
+export async function setItemStatusAction(path: string, itemId: string, status: ItemStatus): Promise<void> {
+  if (!ITEM_STATUSES.includes(status)) throw new Error("Invalid status")
+
   const household = await householdRepository.getOrCreateDefaultHousehold()
-  await itemsRepository.toggleItem(household.id, itemId)
+  await itemsRepository.setItemStatus(household.id, itemId, status)
   revalidatePath(path)
   revalidatePath("/")
   revalidatePath("/budget")
+}
+
+export async function updateItemNoteAction(path: string, itemId: string, note: string | null): Promise<void> {
+  const household = await householdRepository.getOrCreateDefaultHousehold()
+  await itemsRepository.updateItemNote(household.id, itemId, note)
+  revalidatePath(path)
+  revalidatePath("/")
 }
 
 export async function addItemAction(

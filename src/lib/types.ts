@@ -1,5 +1,7 @@
 export type Subsection = "mom" | "baby" | "dad"
 
+export type ItemStatus = "todo" | "in_progress" | "done"
+
 export type SectionKey =
   | "documents"
   | "hospital-bag"
@@ -55,7 +57,8 @@ export interface Item {
   title: string
   price: number | null
   target_week: number | null
-  is_checked: boolean
+  status: ItemStatus
+  note: string | null
   is_seed: boolean
   sort_order: number
   created_at: string

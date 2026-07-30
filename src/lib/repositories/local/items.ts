@@ -1,7 +1,7 @@
 import "server-only"
 import { readStore, writeStore } from "./store"
 import type { ItemsRepository } from "@/lib/repositories/items"
-import type { Item } from "@/lib/types"
+import type { Item, ItemStatus } from "@/lib/types"
 
 function assertOwnedItem(items: Record<string, Item>, householdId: string, itemId: string): Item {
   const item = items[itemId]
@@ -31,7 +31,7 @@ export const itemsRepository: ItemsRepository = {
       Object.values(store.items).filter(
         (item) =>
           item.household_id === householdId &&
-          !item.is_checked &&
+          item.status !== "done" &&
           item.target_week !== null &&
           item.target_week <= week
       )
@@ -41,7 +41,7 @@ export const itemsRepository: ItemsRepository = {
   async getItemsForTargetWeek(householdId, week) {
     return readStore((store) =>
       Object.values(store.items).filter(
-        (item) => item.household_id === householdId && !item.is_checked && item.target_week === week
+        (item) => item.household_id === householdId && item.status !== "done" && item.target_week === week
       )
     )
   },
@@ -61,7 +61,8 @@ export const itemsRepository: ItemsRepository = {
         title,
         price: price ?? null,
         target_week: targetWeek ?? null,
-        is_checked: false,
+        status: "todo",
+        note: null,
         is_seed: false,
         sort_order: nextSortOrder,
         created_at: new Date().toISOString(),
@@ -71,10 +72,17 @@ export const itemsRepository: ItemsRepository = {
     })
   },
 
-  async toggleItem(householdId, itemId) {
+  async setItemStatus(householdId, itemId, status: ItemStatus) {
     await writeStore((store) => {
       const item = assertOwnedItem(store.items, householdId, itemId)
-      item.is_checked = !item.is_checked
+      item.status = status
+    })
+  },
+
+  async updateItemNote(householdId, itemId, note) {
+    await writeStore((store) => {
+      const item = assertOwnedItem(store.items, householdId, itemId)
+      item.note = note
     })
   },
 
