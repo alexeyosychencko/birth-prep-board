@@ -1,4 +1,4 @@
-import type { Section } from "@/lib/types"
+import type { Section, Subsection } from "@/lib/types"
 
 export const SECTIONS = {
   documents: { id: "8f1a2b30-0001-4e11-9a11-0000000000d1", key: "documents", title_uk: "Документи", sort_order: 1 },
@@ -19,3 +19,9 @@ export function getSectionByKey(key: Section["key"]): Section {
   if (!found) throw new Error(`Unknown section key: ${key}`)
   return found
 }
+
+export const HOSPITAL_BAG_SUBSECTIONS: { key: Subsection; title: string }[] = [
+  { key: "mom", title: "Мама" },
+  { key: "baby", title: "Малюк" },
+  { key: "dad", title: "Тато" },
+]

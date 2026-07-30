@@ -1,5 +1,5 @@
 import { householdRepository, itemsRepository } from "@/lib/repositories"
-import { SECTIONS } from "@/lib/sections"
+import { SECTIONS, HOSPITAL_BAG_SUBSECTIONS } from "@/lib/sections"
 import { SectionChecklist } from "@/components/checklist/section-checklist"
 
 export const dynamic = "force-dynamic"
@@ -14,11 +14,7 @@ export default async function Page() {
       <SectionChecklist
         sectionId={SECTIONS.hospitalBag.id}
         initialItems={items}
-        subsections={[
-          { key: "mom", title: "Мама" },
-          { key: "baby", title: "Малюк" },
-          { key: "dad", title: "Тато" },
-        ]}
+        subsections={HOSPITAL_BAG_SUBSECTIONS}
       />
     </div>
   )

@@ -1,28 +1,18 @@
 "use client"
 
-import { useOptimistic, useState, useTransition } from "react"
+import { useOptimistic, useTransition } from "react"
 import { usePathname } from "next/navigation"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Delete02Icon, PlusSignIcon } from "@hugeicons/core-free-icons"
+import { Delete02Icon } from "@hugeicons/core-free-icons"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { AddItemDialog } from "@/components/checklist/add-item-dialog"
 import type { Item, Subsection } from "@/lib/types"
 import {
   toggleItemAction,
-  addItemAction,
   deleteItemAction,
   updateItemPriceAction,
 } from "@/lib/actions/checklist-actions"
@@ -140,7 +130,6 @@ export function SectionChecklist({
   const path = usePathname()
   const [optimisticItems, applyOptimistic] = useOptimistic(initialItems, reduceOptimistic)
   const [isPending, startTransition] = useTransition()
-  const [dialogOpen, setDialogOpen] = useState(false)
 
   function handleToggle(item: Item) {
     startTransition(async () => {
@@ -175,36 +164,6 @@ export function SectionChecklist({
     })
   }
 
-  function handleAdd(
-    title: string,
-    price: number | null,
-    subsection: Subsection | null = null,
-    targetWeek: number | null = null
-  ) {
-    const newItem: Item = {
-      id: crypto.randomUUID(),
-      household_id: "",
-      section_id: sectionId,
-      subsection,
-      title,
-      price,
-      target_week: targetWeek,
-      is_checked: false,
-      is_seed: false,
-      sort_order: Number.MAX_SAFE_INTEGER,
-      created_at: new Date().toISOString(),
-    }
-    setDialogOpen(false)
-    startTransition(async () => {
-      applyOptimistic({ type: "add", item: newItem })
-      try {
-        await addItemAction(path, sectionId, newItem.id, newItem.title, newItem.price, subsection, targetWeek)
-      } catch {
-        toast.error("Не вдалось додати пункт. Спробуйте ще раз.")
-      }
-    })
-  }
-
   const sorted = optimisticItems.slice().sort((a, b) => a.sort_order - b.sort_order)
 
   return (
@@ -232,78 +191,11 @@ export function SectionChecklist({
         />
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogTrigger render={<Button variant="outline" size="sm" className="self-start" />}>
-          <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />
-          Додати пункт
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Новий пункт</DialogTitle>
-          </DialogHeader>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={(event) => {
-              event.preventDefault()
-              const formData = new FormData(event.currentTarget)
-              const title = String(formData.get("title") ?? "").trim()
-              if (!title) return
-              const priceRaw = String(formData.get("price") ?? "").trim()
-              const parsedPrice = priceRaw ? Number(priceRaw) : null
-              const price = parsedPrice !== null && Number.isFinite(parsedPrice) ? parsedPrice : null
-              const targetWeekRaw = String(formData.get("target_week") ?? "").trim()
-              const parsedTargetWeek = targetWeekRaw ? Number(targetWeekRaw) : null
-              const targetWeek =
-                parsedTargetWeek !== null && Number.isInteger(parsedTargetWeek) && parsedTargetWeek >= 1 && parsedTargetWeek <= 42
-                  ? parsedTargetWeek
-                  : null
-              const subsectionRaw = formData.get("subsection")
-              const subsection = subsections ? (String(subsectionRaw) as Subsection) : null
-              if (subsections && !subsection) return
-              handleAdd(title, price, subsection, targetWeek)
-            }}
-          >
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="title">Назва</Label>
-              <Input id="title" name="title" required autoFocus />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="price">Ціна, грн (опціонально)</Label>
-              <Input id="price" name="price" type="number" min="0" step="0.01" inputMode="decimal" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="target_week">Тиждень, до якого зробити (опціонально)</Label>
-              <Input id="target_week" name="target_week" type="number" min="1" max="42" step="1" inputMode="numeric" />
-            </div>
-            {subsections && (
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="subsection">Кому</Label>
-                <Select
-                  name="subsection"
-                  required
-                  items={subsections.map((group) => ({ value: group.key, label: group.title }))}
-                >
-                  <SelectTrigger id="subsection">
-                    <SelectValue placeholder="Оберіть" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subsections.map((group) => (
-                      <SelectItem key={group.key} value={group.key}>
-                        {group.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <DialogFooter>
-              <Button type="submit" disabled={isPending}>
-                Додати
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AddItemDialog
+        fixedSectionId={sectionId}
+        triggerVariant="outline"
+        onAdd={(item) => applyOptimistic({ type: "add", item })}
+      />
     </div>
   )
 }
