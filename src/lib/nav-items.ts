@@ -10,6 +10,7 @@ import {
   Settings01Icon,
   TimelineListIcon,
   ContactBookIcon,
+  PrinterIcon,
 } from "@hugeicons/core-free-icons"
 
 export type NavItem = {
@@ -29,6 +30,7 @@ export const navItems: NavItem[] = [
   { title: "Люди й логістика", href: "/people-logistics", icon: UserGroupIcon, group: "checklists" },
   { title: "Післяпологовий період", href: "/postpartum", icon: HeartPulseIcon, group: "checklists" },
   { title: "Контакти", href: "/contacts", icon: ContactBookIcon, group: "other" },
+  { title: "Друк", href: "/print", icon: PrinterIcon, group: "other" },
   { title: "Бюджет", href: "/budget", icon: Wallet01Icon, group: "other" },
   { title: "Налаштування", href: "/settings", icon: Settings01Icon, group: "other" },
 ]
