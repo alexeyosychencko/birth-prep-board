@@ -64,7 +64,7 @@ export function AppSidebar() {
   const otherItems = navItems.filter((item) => item.group === "other")
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="print:hidden">
       <SidebarHeader>
         <span className="px-2 text-sm font-heading font-semibold">
           Birth Prep Board
@@ -83,7 +83,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <ThemeToggle />
       </SidebarFooter>
-      <SidebarRail />
+      <SidebarRail className="print:hidden" />
     </Sidebar>
   )
 }

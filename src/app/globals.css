@@ -134,3 +134,21 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+
+  * {
+    color: black !important;
+    background: white !important;
+    border-color: black !important;
+    box-shadow: none !important;
+  }
+
+  a {
+    text-decoration: none !important;
+  }
+}
