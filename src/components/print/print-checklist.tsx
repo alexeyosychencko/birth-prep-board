@@ -34,7 +34,7 @@ function PrintChecklistGroup({ title, items }: { title?: string; items: Item[] }
   return (
     <div className="flex flex-col gap-1">
       {title && <h3 className="text-sm font-heading font-medium">{title}</h3>}
-      <ul className="flex flex-col">
+      <ul>
         {items.map((item) => (
           <PrintChecklistRow key={item.id} item={item} />
         ))}

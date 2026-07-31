@@ -151,4 +151,12 @@
   a {
     text-decoration: none !important;
   }
+
+  [data-slot="sidebar"],
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-container"],
+  [data-slot="sidebar-rail"],
+  [data-slot="sheet-overlay"] {
+    display: none !important;
+  }
 }

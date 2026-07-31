@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { householdRepository, pregnancyRepository, contactsRepository, itemsRepository } from "@/lib/repositories"
 import { SECTIONS, HOSPITAL_BAG_SUBSECTIONS } from "@/lib/sections"
 import { getCurrentWeek } from "@/lib/pregnancy"
@@ -5,6 +6,10 @@ import { PrintButton } from "@/components/print/print-button"
 import { PrintHeader } from "@/components/print/print-header"
 import { PrintContacts } from "@/components/print/print-contacts"
 import { PrintChecklistSection } from "@/components/print/print-checklist"
+
+export const metadata: Metadata = {
+  title: "Пакет у пологовий",
+}
 
 export const dynamic = "force-dynamic"
 
@@ -19,7 +24,7 @@ export default async function Page() {
   const currentWeek = pregnancy ? getCurrentWeek(new Date(pregnancy.due_date)) : null
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="space-y-8">
       <PrintButton />
       <PrintHeader dueDate={pregnancy?.due_date ?? null} currentWeek={currentWeek} printDate={new Date()} />
       <PrintContacts contacts={contacts} />

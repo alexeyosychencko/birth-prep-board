@@ -36,7 +36,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Toaster />
+          <Toaster className="print:hidden" />
           <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
@@ -44,7 +44,7 @@ export default function RootLayout({
                 <SidebarTrigger />
                 <span className="text-sm font-heading font-semibold">Birth Prep Board</span>
               </header>
-              <div className="flex-1 p-4 md:p-8">{children}</div>
+              <div className="flex-1 p-4 md:p-8 print:p-0">{children}</div>
             </SidebarInset>
           </SidebarProvider>
         </ThemeProvider>

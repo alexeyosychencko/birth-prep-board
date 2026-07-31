@@ -13,4 +13,8 @@ describe("formatPrintDate", () => {
   it("formats December correctly", () => {
     expect(formatPrintDate(new Date(2026, 11, 1))).toBe("1 грудня 2026")
   })
+
+  it("formats an ISO date string parsed as UTC midnight (matches production call pattern)", () => {
+    expect(formatPrintDate(new Date("2026-07-30"))).toBe("30 липня 2026")
+  })
 })
