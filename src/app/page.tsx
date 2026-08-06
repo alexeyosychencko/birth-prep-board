@@ -38,7 +38,7 @@ export default async function Page() {
   if (!pregnancy) {
     return (
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-heading font-semibold">Дашборд</h1>
+        <h1 className="text-4xl font-heading italic">Дашборд</h1>
         <p className="text-sm text-muted-foreground">Дані про вагітність не знайдено.</p>
       </div>
     )
@@ -48,6 +48,10 @@ export default async function Page() {
   const currentWeek = getCurrentWeek(dueDate)
   const daysUntilDue = getDaysUntilDue(dueDate)
   const isOverdue = currentWeek > DUE_DATE_WEEK
+  const dueLabel =
+    daysUntilDue >= 0
+      ? `${daysUntilDue} ${pluralizeDays(daysUntilDue)} до ПДР`
+      : `минув ${Math.abs(daysUntilDue)} ${pluralizeDays(Math.abs(daysUntilDue))} тому`
   const weekContent = getWeekContent(isOverdue ? DUE_DATE_WEEK : currentWeek)
   const done = items.filter((item) => item.status === "done").length
   const total = items.length
@@ -72,24 +76,13 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-heading font-semibold">Дашборд</h1>
+      <h1 className="text-4xl font-heading italic">Дашборд</h1>
 
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <p className="flex items-baseline gap-1">
-            <span className="font-heading text-3xl font-semibold tabular-nums">
-              {isOverdue ? "40+" : currentWeek}
-            </span>
-            <span className="text-sm text-muted-foreground">з 40</span>
-          </p>
-          <p className="text-sm text-muted-foreground tabular-nums">
-            {daysUntilDue >= 0
-              ? `${daysUntilDue} ${pluralizeDays(daysUntilDue)} до ПДР`
-              : `ПДР минув ${Math.abs(daysUntilDue)} ${pluralizeDays(Math.abs(daysUntilDue))} тому`}
-          </p>
-        </div>
-        <WeekTimeline currentWeek={currentWeek} />
-      </div>
+      <WeekTimeline
+        currentWeek={currentWeek}
+        weekLabel={isOverdue ? "40+" : String(currentWeek)}
+        dueLabel={dueLabel}
+      />
 
       <div className="flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:items-start">
         <div className="flex flex-col gap-6 lg:col-span-2">

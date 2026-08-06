@@ -20,7 +20,7 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-heading font-semibold">Бюджет</h1>
+      <h1 className="text-3xl font-heading italic">Бюджет</h1>
 
       <div className="flex flex-col gap-1">
         <Progress value={spentProgress}>

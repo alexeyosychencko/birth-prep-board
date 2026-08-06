@@ -35,7 +35,7 @@ export function SectionGrid({
               </CardHeader>
               <CardContent className="flex flex-col gap-2">
                 <Progress value={progress} />
-                <p className="text-xs text-muted-foreground tabular-nums">{`${done} з ${total}`}</p>
+                <p className="font-mono text-xs text-muted-foreground tabular-nums">{`${done} з ${total}`}</p>
               </CardContent>
             </Card>
           </Link>

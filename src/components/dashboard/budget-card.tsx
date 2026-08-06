@@ -22,11 +22,11 @@ export function BudgetCard({ goal, items }: { goal: BudgetGoal; items: Item[] })
           <ProgressValueText value={`${spent} з ${goal.goal_amount} грн`} />
         </Progress>
         <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>{`за чеклістом ${checklistSpent} грн`}</span>
+          <span className="font-mono tabular-nums">{`за чеклістом ${checklistSpent} грн`}</span>
           <OtherExpensesQuickEdit otherExpenses={goal.other_expenses} />
         </div>
         {goal.goal_amount > 0 && overBy > 0 && (
-          <p className="text-xs text-muted-foreground">{`перевищено на ${overBy} грн`}</p>
+          <p className="font-mono text-xs text-muted-foreground tabular-nums">{`перевищено на ${overBy} грн`}</p>
         )}
       </CardContent>
     </Card>

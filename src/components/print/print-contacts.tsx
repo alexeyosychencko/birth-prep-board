@@ -14,7 +14,7 @@ export function PrintContacts({ contacts }: { contacts: Contact[] }) {
               <span className="text-base font-medium">{contact.name}</span>
               {contact.role && <span className="text-sm">{contact.role}</span>}
               {contact.phone && (
-                <a href={normalizePhoneHref(contact.phone)} className="ml-auto text-lg font-semibold">
+                <a href={normalizePhoneHref(contact.phone)} className="ml-auto font-mono text-lg font-semibold">
                   {contact.phone}
                 </a>
               )}

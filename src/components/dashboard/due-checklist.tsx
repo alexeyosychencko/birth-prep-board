@@ -80,7 +80,7 @@ function DueRow({
           <Badge className="shrink-0 bg-accent text-accent-foreground">в процесі</Badge>
         )}
       </div>
-      <Badge variant="secondary" className="shrink-0">
+      <Badge variant="secondary" className="shrink-0 font-mono tabular-nums">
         {formatWeekBadgeLabel(item.target_week, currentWeek)}
       </Badge>
     </li>

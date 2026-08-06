@@ -66,7 +66,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <span className="px-2 text-sm font-heading font-semibold">
+        <span className="px-2 text-sm font-heading italic">
           Birth Prep Board
         </span>
       </SidebarHeader>

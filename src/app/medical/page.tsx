@@ -15,7 +15,7 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-heading font-semibold">{SECTIONS.medical.title_uk}</h1>
+      <h1 className="text-3xl font-heading italic">{SECTIONS.medical.title_uk}</h1>
       <SectionChecklist sectionId={SECTIONS.medical.id} initialItems={items} currentWeek={currentWeek} />
     </div>
   )

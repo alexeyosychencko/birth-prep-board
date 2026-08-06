@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Figtree } from "next/font/google";
+import { Geist_Mono, Figtree, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -15,7 +15,14 @@ const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
+});
+
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-heading",
 });
 
 export const metadata: Metadata = {
@@ -32,7 +39,7 @@ export default function RootLayout({
     <html
       lang="uk"
       suppressHydrationWarning
-      className={cn("h-full", "antialiased", geistMono.variable, "font-sans", figtree.variable)}
+      className={cn("h-full", "antialiased", geistMono.variable, "font-sans", figtree.variable, cormorantGaramond.variable)}
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -42,7 +49,7 @@ export default function RootLayout({
             <SidebarInset>
               <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4 md:hidden print:hidden">
                 <SidebarTrigger />
-                <span className="text-sm font-heading font-semibold">Birth Prep Board</span>
+                <span className="text-sm font-heading italic">Birth Prep Board</span>
               </header>
               <div className="flex-1 p-4 md:p-8 print:p-0">{children}</div>
             </SidebarInset>

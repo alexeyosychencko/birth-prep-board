@@ -14,7 +14,7 @@ export function PrintHeader({
 
   return (
     <header className="flex flex-col gap-1 print:break-inside-avoid">
-      <h1 className="text-3xl font-heading font-semibold">Пакет у пологовий</h1>
+      <h1 className="text-3xl font-heading italic">Пакет у пологовий</h1>
       <dl className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
         <div className="flex gap-1">
           <dt className="text-muted-foreground">ПДР:</dt>
@@ -22,7 +22,7 @@ export function PrintHeader({
         </div>
         <div className="flex gap-1">
           <dt className="text-muted-foreground">Поточний тиждень:</dt>
-          <dd>{currentWeek === null ? "не задано" : `${isOverdue ? "40+" : currentWeek} з 40`}</dd>
+          <dd className="font-mono tabular-nums">{currentWeek === null ? "не задано" : `${isOverdue ? "40+" : currentWeek} з 40`}</dd>
         </div>
         <div className="flex gap-1">
           <dt className="text-muted-foreground">Дата друку:</dt>

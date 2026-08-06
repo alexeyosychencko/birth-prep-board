@@ -10,7 +10,7 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-heading font-semibold">Тижні пунктів</h1>
+      <h1 className="text-3xl font-heading italic">Тижні пунктів</h1>
       <WeeksEditor items={items} sections={SECTIONS_LIST} />
     </div>
   )

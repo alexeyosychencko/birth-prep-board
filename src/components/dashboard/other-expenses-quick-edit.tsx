@@ -35,7 +35,7 @@ export function OtherExpensesQuickEdit({ otherExpenses }: { otherExpenses: numbe
         defaultValue={optimisticValue}
         disabled={isPending}
         autoFocus
-        className="h-7 w-20 text-right text-xs"
+        className="h-7 w-20 text-right font-mono text-xs"
         onBlur={(event) => {
           const raw = event.currentTarget.value.trim()
           const parsed = raw === "" ? 0 : Number(raw)
@@ -58,7 +58,7 @@ export function OtherExpensesQuickEdit({ otherExpenses }: { otherExpenses: numbe
       size="sm"
       disabled={isPending}
       onClick={() => setEditing(true)}
-      className="h-7 px-2 text-xs text-muted-foreground"
+      className="h-7 px-2 font-mono text-xs text-muted-foreground tabular-nums"
     >
       {`інші ${optimisticValue} грн`}
     </Button>
